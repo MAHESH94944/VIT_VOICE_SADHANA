@@ -85,9 +85,28 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
 
 ### Base URLs
 
+- Health Check: `/`
 - Auth endpoints: `/api/auth`
 - Counsilli endpoints: `/api/counsilli`
 - Counsellor endpoints: `/api/counsellor`
+
+---
+
+### Health Check Endpoint
+
+#### 1. Check API Status
+
+**GET** `/`
+
+Returns a simple message to confirm the API is running.
+
+**Response:**
+
+```json
+{
+  "message": "VIT VOICE Sadhana API is working!"
+}
+```
 
 ---
 

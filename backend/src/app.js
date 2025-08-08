@@ -16,6 +16,11 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ message: "VIT VOICE Sadhana API is working!" });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/counsilli", counsilliRoutes);
 app.use("/api/counsellor", counsellorRoutes);
