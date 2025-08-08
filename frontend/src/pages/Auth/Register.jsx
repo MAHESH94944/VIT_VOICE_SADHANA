@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { registerUser, verifyOtp } from "../../api/auth";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -65,6 +66,13 @@ export default function Register() {
 
   return (
     <div className="auth-container">
+      <Helmet>
+        <title>Register - VIT VOICE Sadhana</title>
+        <meta
+          name="description"
+          content="Create an account for VIT VOICE Sadhana to start tracking your spiritual practices and connect with your counsellor."
+        />
+      </Helmet>
       <div className="w-full max-w-md p-8 space-y-6 bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">

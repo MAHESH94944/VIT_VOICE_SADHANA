@@ -1,8 +1,89 @@
-# VIT VOICE Sadhana Backend API
+# VIT VOICE Sadhana Application
 
-This backend provides authentication and sadhana tracking endpoints for the VIT VOICE Sadhana MERN application.
+A full-stack MERN application designed for members of VIT VOICE to track their daily spiritual practices (sadhana), view progress reports, and connect with their counsellors for guidance.
 
-## Base URLs
+## Features
+
+- **User Authentication:** Secure registration with OTP email verification and JWT-based login.
+- **Role-Based Access Control:**
+  - **Counsilli:** Can submit daily sadhana cards and view their own monthly progress reports.
+  - **Counsellor:** Can view a list of their assigned counsillis and check their detailed monthly reports.
+- **Sadhana Tracking:** A simple form for counsillis to submit their daily spiritual activities.
+- **Monthly Reports:** A calendar-based view showing daily submission status for any given month.
+- **Responsive UI:** A clean and modern user interface built with React and Tailwind CSS.
+- **RESTful API:** A robust backend built with Node.js, Express, and MongoDB.
+
+## Tech Stack
+
+- **Frontend:**
+  - React
+  - React Router
+  - Tailwind CSS
+  - Axios
+  - Recharts (for graphs)
+  - Vite (for development and bundling)
+- **Backend:**
+  - Node.js
+  - Express
+  - MongoDB (with Mongoose)
+  - JSON Web Tokens (JWT) for authentication
+  - Nodemailer for sending OTP emails
+  - Bcrypt.js for password hashing
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or later)
+- npm
+- A MongoDB database (local or cloud-based like MongoDB Atlas)
+
+### Backend Setup
+
+1.  Navigate to the `backend` directory:
+    ```bash
+    cd backend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Create a `.env` file in the `backend` directory and add the following environment variables:
+    ```env
+    PORT=3000
+    MONGODB_URI=<YOUR_MONGODB_CONNECTION_STRING>
+    JWT_SECRET=<YOUR_JWT_SECRET>
+    EMAIL_USER=<YOUR_GMAIL_ADDRESS>
+    EMAIL_PASS=<YOUR_GMAIL_APP_PASSWORD>
+    FRONTEND_URL=http://localhost:5173
+    ```
+4.  Start the backend server:
+    ```bash
+    npm start
+    ```
+    The server will be running at `http://localhost:3000`.
+
+### Frontend Setup
+
+1.  Navigate to the `frontend` directory:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the frontend development server:
+    ```bash
+    npm run dev
+    ```
+    The application will be accessible at `http://localhost:5173`.
+
+---
+
+## API Documentation
+
+### Base URLs
 
 - Auth endpoints: `/api/auth`
 - Counsilli endpoints: `/api/counsilli`
@@ -10,9 +91,9 @@ This backend provides authentication and sadhana tracking endpoints for the VIT 
 
 ---
 
-## Auth Endpoints
+### Auth Endpoints
 
-### 1. Register User
+#### 1. Register User
 
 **POST** `/api/auth/register`
 
@@ -56,7 +137,7 @@ For Counsilli:
 
 ---
 
-### 2. Verify OTP
+#### 2. Verify OTP
 
 **POST** `/api/auth/verify-otp`
 
@@ -84,7 +165,7 @@ Verifies the OTP sent to the user's email during registration.
 
 ---
 
-### 3. Login
+#### 3. Login
 
 **POST** `/api/auth/login`
 
@@ -112,7 +193,7 @@ Logs in a user with email and password (OTP must be verified).
 
 ---
 
-### 4. Logout
+#### 4. Logout
 
 **POST** `/api/auth/logout`
 
@@ -127,11 +208,11 @@ Logs out the user (clears auth cookie).
 
 ---
 
-## Counsilli Endpoints
+### Counsilli Endpoints
 
 All endpoints require authentication (JWT token in cookie or `Authorization` header).
 
-### 1. Get Dashboard
+#### 1. Get Dashboard
 
 **GET** `/api/counsilli/dashboard`
 
@@ -152,7 +233,7 @@ Returns the counsilli's profile and recent sadhana cards.
 
 ---
 
-### 2. Add Sadhana Card
+#### 2. Add Sadhana Card
 
 **POST** `/api/counsilli/sadhana/add`
 
@@ -193,7 +274,7 @@ Submit a daily/weekly sadhana card.
 
 ---
 
-### 3. Get Monthly Sadhana Report
+#### 3. Get Monthly Sadhana Report
 
 **GET** `/api/counsilli/sadhana/monthly/:month`
 
@@ -212,11 +293,11 @@ Returns all sadhana cards for the specified month (`month` format: `YYYY-MM`).
 
 ---
 
-## Counsellor Endpoints
+### Counsellor Endpoints
 
 All endpoints require authentication (JWT token in cookie or `Authorization` header).
 
-### 1. Get Dashboard
+#### 1. Get Dashboard
 
 **GET** `/api/counsellor/dashboard`
 
@@ -235,7 +316,7 @@ Returns the counsellor's profile and count of assigned counsillis.
 
 ---
 
-### 2. List Assigned Counsillis
+#### 2. List Assigned Counsillis
 
 **GET** `/api/counsellor/counsillis`
 
@@ -254,7 +335,7 @@ Returns all counsillis assigned to the counsellor.
 
 ---
 
-### 3. Get Counsilli's Full Sadhana Report
+#### 3. Get Counsilli's Full Sadhana Report
 
 **GET** `/api/counsellor/counsilli/:id/sadhana`
 
@@ -274,7 +355,7 @@ Returns all sadhana cards for a specific counsilli.
 
 ---
 
-### 4. Get Counsilli's Monthly Sadhana Report
+#### 4. Get Counsilli's Monthly Sadhana Report
 
 **GET** `/api/counsellor/counsilli/:id/sadhana/:month`
 

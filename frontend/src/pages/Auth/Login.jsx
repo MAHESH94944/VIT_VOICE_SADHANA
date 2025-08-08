@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { Helmet } from "react-helmet-async";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -28,6 +29,13 @@ export default function Login() {
 
   return (
     <div className="auth-container">
+      <Helmet>
+        <title>Login - VIT VOICE Sadhana</title>
+        <meta
+          name="description"
+          content="Login to your VIT VOICE Sadhana account to track your spiritual progress and connect with your counsellor."
+        />
+      </Helmet>
       <div className="w-full max-w-md p-8 space-y-6 bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">Welcome Back!</h1>

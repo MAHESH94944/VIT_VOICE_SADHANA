@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Replace with your actual domain
+Sitemap: https://www.vitvoicesadhana.com/sitemap.xml
