@@ -8,7 +8,8 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin:
+      process.env.FRONTEND_URL || "https://vit-voice-sadhana-1.onrender.com",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
