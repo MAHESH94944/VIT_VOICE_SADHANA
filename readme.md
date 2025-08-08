@@ -79,6 +79,26 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
     ```
     The application will be accessible at `http://localhost:5173`.
 
+### Deployment
+
+The production backend is deployed at `https://vit-voice-sadhana.onrender.com`.
+The production frontend is deployed at `https://vit-voice-sadhana-1.onrender.com`.
+
+When deploying the frontend to a service like Vercel or Netlify, you must set up a rewrite rule to proxy requests from `/api` to the production backend URL to avoid CORS issues.
+
+**Example (Vercel `vercel.json`):**
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://vit-voice-sadhana.onrender.com/api/:path*"
+    }
+  ]
+}
+```
+
 ---
 
 ## API Documentation
