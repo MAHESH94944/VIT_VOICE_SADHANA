@@ -5,7 +5,6 @@ import { formatToDDMMYYYY } from "../../utils/formatDate";
 import PageTitle from "../../components/common/PageTitle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
-import { Helmet } from "react-helmet-async";
 
 export default function CounsilliList() {
   const [counsillis, setCounsillis] = useState([]);
@@ -38,9 +37,6 @@ export default function CounsilliList() {
 
   return (
     <div className="max-w-5xl mx-auto mt-8 p-4">
-      <Helmet>
-        <title>Counsilli List - VOICE Sadhana</title>
-      </Helmet>
       <PageTitle
         title="Your Counsillis"
         subtitle="View and manage reports for your assigned counsillis."

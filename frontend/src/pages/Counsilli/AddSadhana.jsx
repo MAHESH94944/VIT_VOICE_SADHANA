@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { addSadhana } from "../../api/counsilli"; // Corrected import name
+import { addSadhana } from "../../api/counsilli";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/common/PageTitle";
 import Card from "../../components/common/Card";
-import { Helmet } from "react-helmet-async";
 
 export default function AddSadhana() {
   const [form, setForm] = useState({
@@ -46,13 +45,9 @@ export default function AddSadhana() {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-8 p-4 bg-white rounded shadow">
-      <Helmet>
-        <title>Add Sadhana</title>
-      </Helmet>
-      <PageTitle title="Add Sadhana" />
+    <div className="max-w-lg mx-auto mt-8 p-4">
+      <PageTitle title="Submit Sadhana Card" />
       <Card>
-        <h2 className="text-xl font-bold mb-4">Submit Sadhana Card</h2>
         {msg && <div className="mb-2 text-red-500">{msg}</div>}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input

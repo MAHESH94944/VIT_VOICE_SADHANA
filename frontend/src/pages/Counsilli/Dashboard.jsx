@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/common/PageTitle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
-import { Helmet } from "react-helmet-async";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -32,9 +31,6 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-4">
-      <Helmet>
-        <title>Your Dashboard - VOICE Sadhana</title>
-      </Helmet>
       <div className="flex items-center justify-between mb-6">
         <PageTitle
           title="Your Dashboard"

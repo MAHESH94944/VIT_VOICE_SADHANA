@@ -10,7 +10,6 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-import { Helmet } from "react-helmet-async";
 
 // Lazy load all page components
 const Register = lazy(() => import("./pages/Auth/Register"));
@@ -209,13 +208,6 @@ function Navbar() {
 function AppShell() {
   return (
     <BrowserRouter>
-      <Helmet>
-        <title>VIT VOICE Sadhana</title>
-        <meta
-          name="description"
-          content="A web application to track sadhana for VIT VOICE members."
-        />
-      </Helmet>
       {/* replace old inline nav with Navbar */}
       <Navbar />
       <Suspense fallback={<LoadingSpinner />}>
