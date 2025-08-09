@@ -7,8 +7,9 @@ const counsellorRoutes = require("./routes/counsellor");
 const app = express();
 
 const allowedOrigins = [
-  "https://vit-voice-sadhana.vercel.app", // Local development
-  process.env.FRONTEND_URL, // Production frontend
+  "https://vit-voice-sadhana.vercel.app", // Old Vercel deployment
+  "http://localhost:5173", // Local development
+  process.env.FRONTEND_URL, // Production frontend from .env
 ].filter(Boolean); // Filter out undefined values
 
 app.use(

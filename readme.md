@@ -94,7 +94,7 @@ The production frontend is deployed at `https://vit-voice-sadhana-1.onrender.com
 
 Render will automatically use the `npm start` command to run your application.
 
-**Important (Frontend on Vercel):** When deploying the frontend to Vercel, no special configuration is needed in the Vercel dashboard. The `vercel.json` file in the `frontend` directory will automatically handle proxying API requests to your Render backend.
+**Important (Frontend on Render/Vercel):** If deploying the frontend to a service that does not support server-side proxies (like basic Render static sites), ensure your API calls use the full backend URL (`https://vit-voice-sadhana.onrender.com/api/...`). If using Vercel, the `vercel.json` file can handle proxying.
 
 ---
 
