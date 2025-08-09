@@ -28,6 +28,7 @@ const durationOptions = [
   "2 hr 30 min",
   "3 hr",
   "More than 3 hr",
+  "Other...", // Add custom option
 ];
 
 export default function AddSadhana() {
@@ -43,6 +44,14 @@ export default function AddSadhana() {
     seva: "0 min",
     concern: "",
   });
+  // New state for custom duration values
+  const [customDurations, setCustomDurations] = useState({
+    dayRest: "",
+    hearing: "",
+    reading: "",
+    study: "",
+    seva: "",
+  });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -51,12 +60,26 @@ export default function AddSadhana() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // New handler for custom input fields
+  const handleCustomChange = (e) => {
+    setCustomDurations({ ...customDurations, [e.target.name]: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
     setLoading(true);
+
+    // Prepare form data, using custom values if "Other..." is selected
+    const dataToSend = { ...form };
+    for (const key in customDurations) {
+      if (form[key] === "Other...") {
+        dataToSend[key] = customDurations[key];
+      }
+    }
+
     try {
-      await addSadhana(form);
+      await addSadhana(dataToSend);
       navigate("/counsilli/dashboard");
     } catch (err) {
       setMsg(err.message);
@@ -64,7 +87,7 @@ export default function AddSadhana() {
     setLoading(false);
   };
 
-  const renderSelect = (name, label, options) => (
+  const renderSelect = (name, label, options, isDuration = false) => (
     <div>
       <label
         htmlFor={name}
@@ -85,6 +108,17 @@ export default function AddSadhana() {
           </option>
         ))}
       </select>
+      {isDuration && form[name] === "Other..." && (
+        <input
+          type="text"
+          name={name}
+          value={customDurations[name]}
+          onChange={handleCustomChange}
+          placeholder="e.g., 1 hr 10 min"
+          className="w-full mt-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          required
+        />
+      )}
     </div>
   );
 
@@ -122,12 +156,12 @@ export default function AddSadhana() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {renderSelect("wakeUp", "Wake Up Time", timeOptions)}
             {renderSelect("japaCompleted", "Japa Completed By", timeOptions)}
-            {renderSelect("dayRest", "Day Rest", durationOptions)}
-            {renderSelect("hearing", "Hearing", durationOptions)}
-            {renderSelect("reading", "Reading", durationOptions)}
-            {renderSelect("study", "Study", durationOptions)}
+            {renderSelect("dayRest", "Day Rest", durationOptions, true)}
+            {renderSelect("hearing", "Hearing", durationOptions, true)}
+            {renderSelect("reading", "Reading", durationOptions, true)}
+            {renderSelect("study", "Study", durationOptions, true)}
             {renderSelect("timeToBed", "Time To Bed", timeOptions)}
-            {renderSelect("seva", "Seva", durationOptions)}
+            {renderSelect("seva", "Seva", durationOptions, true)}
           </div>
 
           <div>
