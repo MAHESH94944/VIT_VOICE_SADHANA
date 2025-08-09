@@ -7,7 +7,8 @@ import {
   parseDurationToMinutes,
 } from "../../utils/parseTime";
 import {
-  LineChart,
+  ComposedChart,
+  Bar,
   Line,
   XAxis,
   YAxis,
@@ -52,6 +53,7 @@ export default function CounsilliReport() {
         reading: parseDurationToMinutes(card.reading),
         hearing: parseDurationToMinutes(card.hearing),
         study: parseDurationToMinutes(card.study),
+        seva: parseDurationToMinutes(card.seva),
       }))
       .sort((a, b) => a.day - b.day);
   }, [report]);
@@ -144,7 +146,7 @@ export default function CounsilliReport() {
               Monthly Activity Trends
             </h3>
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart
+              <ComposedChart
                 data={chartData}
                 margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
@@ -182,44 +184,46 @@ export default function CounsilliReport() {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: "14px" }} />
+                <Bar
+                  yAxisId="left"
+                  dataKey="reading"
+                  name="Reading"
+                  stackId="a"
+                  fill="#82ca9d"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="hearing"
+                  name="Hearing"
+                  stackId="a"
+                  fill="#ffc658"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="study"
+                  name="Study"
+                  stackId="a"
+                  fill="#ff7300"
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="seva"
+                  name="Seva"
+                  stackId="a"
+                  fill="#8884d8"
+                />
                 <Line
                   yAxisId="right"
                   type="monotone"
                   dataKey="wakeUp"
                   name="Wake Up"
-                  stroke="#8884d8"
-                  strokeWidth={2}
+                  stroke="#d82727"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
                   activeDot={{ r: 8 }}
                   connectNulls
                 />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="reading"
-                  name="Reading"
-                  stroke="#82ca9d"
-                  strokeWidth={2}
-                  connectNulls
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="hearing"
-                  name="Hearing"
-                  stroke="#ffc658"
-                  strokeWidth={2}
-                  connectNulls
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="study"
-                  name="Study"
-                  stroke="#ff7300"
-                  strokeWidth={2}
-                  connectNulls
-                />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
 
