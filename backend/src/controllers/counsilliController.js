@@ -44,6 +44,27 @@ exports.addSadhana = async (req, res) => {
       concern,
     } = req.body;
 
+    // Check for duplicate entry on the same day
+    const startOfDay = new Date(date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const existingSadhana = await Sadhana.findOne({
+      counsilli: userId,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
+
+    if (existingSadhana) {
+      return res.status(409).json({
+        message: "A sadhana card for this date has already been submitted.",
+      });
+    }
+
     const sadhana = new Sadhana({
       counsilli: userId,
       date,
