@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 import { validatePassword } from "../../utils/validate";
 
 export default function Register() {
+  const [role, setRole] = useState("counsilli"); // 'counsilli' or 'counsellor'
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    role: "counsilli",
     counsellorName: "",
   });
   const [counsellors, setCounsellors] = useState([]);
@@ -18,19 +18,21 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchCounsellors() {
-      try {
-        const data = await getCounsellors();
-        setCounsellors(data);
-        if (data.length > 0) {
-          setForm((prev) => ({ ...prev, counsellorName: data[0].name }));
+    if (role === "counsilli") {
+      async function fetchCounsellors() {
+        try {
+          const data = await getCounsellors();
+          setCounsellors(data);
+          if (data.length > 0) {
+            setForm((prev) => ({ ...prev, counsellorName: data[0].name }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch counsellors", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch counsellors", err);
       }
+      fetchCounsellors();
     }
-    fetchCounsellors();
-  }, []);
+  }, [role]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,7 +51,16 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await registerUser(form);
+      const dataToSend = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role,
+      };
+      if (role === "counsilli") {
+        dataToSend.counsellorName = form.counsellorName;
+      }
+      await registerUser(dataToSend);
       setStep(2);
       setMsg({ text: "OTP sent to your email.", type: "success" });
     } catch (err) {
@@ -91,6 +102,31 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="w-full max-w-md p-8 space-y-6 bg-white/50 backdrop-blur-md rounded-2xl shadow-2xl">
+        {step === 1 && (
+          <div className="flex border-b border-gray-300">
+            <button
+              onClick={() => setRole("counsilli")}
+              className={`flex-1 py-3 text-center font-semibold transition-colors ${
+                role === "counsilli"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Register as Counsilli
+            </button>
+            <button
+              onClick={() => setRole("counsellor")}
+              className={`flex-1 py-3 text-center font-semibold transition-colors ${
+                role === "counsellor"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Register as Counsellor
+            </button>
+          </div>
+        )}
+
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">
             {step === 1 && "Create Your Account"}
@@ -133,16 +169,7 @@ export default function Register() {
               className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               required
             />
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            >
-              <option value="counsilli">Counsilli</option>
-              <option value="counsellor">Counsellor</option>
-            </select>
-            {form.role === "counsilli" && (
+            {role === "counsilli" && (
               <select
                 name="counsellorName"
                 value={form.counsellorName}
