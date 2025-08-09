@@ -215,15 +215,17 @@ function Navbar() {
             </>
           )}
           {user && (
-            <button
-              onClick={() => {
-                setOpen(false);
-                logout();
-              }}
-              className="w-full text-left block bg-red-600 px-3 py-2 rounded-md text-base font-medium hover:bg-red-700"
-            >
-              Logout
-            </button>
+            <div className="pt-4 mt-4 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  logout();
+                }}
+                className="w-full text-left block bg-red-600 px-3 py-2 rounded-md text-base font-medium hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
       )}

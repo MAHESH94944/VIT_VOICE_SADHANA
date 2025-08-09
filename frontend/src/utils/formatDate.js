@@ -36,18 +36,30 @@ export const formatToMonthYear = (dateInput) => {
 };
 
 /**
- * Generates a list of the last 12 months for a dropdown.
+ * Generates a list of the next 12 months from January 2024 for a dropdown.
  * @returns {Array<{value: string, label: string}>} An array of month options.
  */
 export const getMonthOptions = () => {
-  const now = new Date();
   const options = [];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const now = new Date();
+  const startDate = new Date(2024, 0, 1); // Start from January 2024
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 12, 1); // Go 12 months into the future
+
+  let currentDate = endDate;
+
+  while (currentDate >= startDate) {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const monthStr = String(month + 1).padStart(2, "0");
+    const monthName = currentDate.toLocaleString("default", { month: "long" });
+
     options.push({
-      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleString("default", { month: "long", year: "numeric" }),
+      value: `${year}-${monthStr}`,
+      label: `${monthName} ${year}`,
     });
+
+    currentDate.setMonth(currentDate.getMonth() - 1);
   }
+
   return options;
 };
