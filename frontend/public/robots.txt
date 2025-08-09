@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-# Replace with your actual domain
+Sitemap: https://vit-voice-sadhana.vercel.app/sitemap.xml
 Sitemap: https://www.vitvoicesadhana.com/sitemap.xml

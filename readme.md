@@ -12,6 +12,7 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
 - **Monthly Reports:** A calendar-based view showing daily submission status for any given month.
 - **Responsive UI:** A clean and modern user interface built with React and Tailwind CSS.
 - **RESTful API:** A robust backend built with Node.js, Express, and MongoDB.
+- **SEO Optimized:** Includes `sitemap.xml`, `robots.txt`, and rich meta tags for better search engine ranking.
 
 ## Tech Stack
 
