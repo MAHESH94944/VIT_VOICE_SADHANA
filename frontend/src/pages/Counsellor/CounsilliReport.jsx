@@ -18,60 +18,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-function getDaysInMonth(year, month) {
-  return new Date(year, month, 0).getDate();
-}
-
-export default function CounsilliReport() {
-  const { id } = useParams();
-  const [month, setMonth] = useState(getMonthOptions()[0].value);
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function fetchReport() {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await getCounsilliMonthlyReport(id, month);
-        setReport(res);
-      } catch (err) {
-        setError(err.message);
-      }
-      setLoading(false);
-    }
-    fetchReport();
-  }, [id, month]);
-
-  const chartData = useMemo(() => {
-    if (!report || !report.sadhanaCards || report.sadhanaCards.length === 0) {
-      // Return an empty array. The `hasData` flag will prevent the chart from rendering.
-      return [];
-    }
-    return report.sadhanaCards
-      .map((card) => ({
-        day: new Date(card.date).getDate(),
-        wakeUp: parseTimeToMinutes(card.wakeUp),
-        reading: parseDurationToMinutes(card.reading),
-        hearing: parseDurationToMinutes(card.hearing),
-        study: parseDurationToMinutes(card.study),
-        seva: parseDurationToMinutes(card.seva),
-      }))
-      .sort((a, b) => a.day - b.day);
-  }, [report]);
-
-  // Prepare calendar data
-  const [year, monthNum] = month.split("-");
-  const daysInMonth = getDaysInMonth(Number(year), Number(monthNum));
-  const cardByDay = {};
-  if (report && report.sadhanaCards) {
-    report.sadhanaCards.forEach((card) => {
-      const day = new Date(card.date).getDate();
-      cardByDay[day] = card;
-    });
-  }
-
+// Helper component for the chart to ensure it only renders with valid data
+function SadhanaChart({ data }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const formatMinutesToTime = (mins) => {
@@ -112,8 +60,145 @@ export default function CounsilliReport() {
     return null;
   };
 
-  const hasData =
-    report && report.sadhanaCards && report.sadhanaCards.length > 0;
+  return (
+    <ResponsiveContainer width="100%" height={400}>
+      <ComposedChart
+        data={data}
+        margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+        <YAxis
+          yAxisId="left"
+          domain={[0, "dataMax + 60"]}
+          label={{
+            value: "Duration (minutes)",
+            angle: -90,
+            position: "insideLeft",
+            style: { textAnchor: "middle", fontSize: 14 },
+          }}
+          tick={{ fontSize: 12 }}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={[300, 720]}
+          reversed={true}
+          tickFormatter={(value) => {
+            const h = Math.floor(value / 60) % 24;
+            const m = value % 60;
+            return `${h % 12 === 0 ? 12 : h % 12}:${m
+              .toString()
+              .padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+          }}
+          label={{
+            value: "Wake Up Time",
+            angle: 90,
+            position: "insideRight",
+            style: { textAnchor: "middle", fontSize: 14 },
+          }}
+          tick={{ fontSize: 12 }}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend wrapperStyle={{ fontSize: "14px" }} />
+        <Bar
+          yAxisId="left"
+          dataKey="reading"
+          name="Reading"
+          stackId="a"
+          fill="#82ca9d"
+        />
+        <Bar
+          yAxisId="left"
+          dataKey="hearing"
+          name="Hearing"
+          stackId="a"
+          fill="#ffc658"
+        />
+        <Bar
+          yAxisId="left"
+          dataKey="study"
+          name="Study"
+          stackId="a"
+          fill="#ff7300"
+        />
+        <Bar
+          yAxisId="left"
+          dataKey="seva"
+          name="Seva"
+          stackId="a"
+          fill="#8884d8"
+        />
+        <Line
+          yAxisId="right"
+          type="monotone"
+          dataKey="wakeUp"
+          name="Wake Up"
+          stroke="#d82727"
+          strokeWidth={3}
+          dot={{ r: 4 }}
+          activeDot={{ r: 8 }}
+          connectNulls
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
+function getDaysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+export default function CounsilliReport() {
+  const { id } = useParams();
+  const [month, setMonth] = useState(getMonthOptions()[0].value);
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchReport() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await getCounsilliMonthlyReport(id, month);
+        setReport(res);
+      } catch (err) {
+        setError(err.message);
+      }
+      setLoading(false);
+    }
+    fetchReport();
+  }, [id, month]);
+
+  const chartData = useMemo(() => {
+    if (!report || !report.sadhanaCards || report.sadhanaCards.length === 0) {
+      return null;
+    }
+    return report.sadhanaCards
+      .map((card) => ({
+        day: new Date(card.date).getDate(),
+        wakeUp: parseTimeToMinutes(card.wakeUp),
+        reading: parseDurationToMinutes(card.reading) || 0,
+        hearing: parseDurationToMinutes(card.hearing) || 0,
+        study: parseDurationToMinutes(card.study) || 0,
+        seva: parseDurationToMinutes(card.seva) || 0,
+      }))
+      .sort((a, b) => a.day - b.day);
+  }, [report]);
+
+  // Prepare calendar data
+  const [year, monthNum] = month.split("-");
+  const daysInMonth = getDaysInMonth(Number(year), Number(monthNum));
+  const cardByDay = {};
+  if (report && report.sadhanaCards) {
+    report.sadhanaCards.forEach((card) => {
+      const day = new Date(card.date).getDate();
+      cardByDay[day] = card;
+    });
+  }
+
+  const hasData = chartData !== null;
 
   return (
     <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
@@ -151,96 +236,7 @@ export default function CounsilliReport() {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
               Monthly Activity Trends
             </h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart
-                data={chartData}
-                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis
-                  yAxisId="left"
-                  label={{
-                    value: "Duration (minutes)",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: { textAnchor: "middle", fontSize: 14 },
-                  }}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  domain={(data) => {
-                    // Guard against invalid data from recharts when dataset is empty
-                    if (!data || data[0] === undefined || data[1] === undefined) {
-                      return [300, 720]; // Default domain (e.g., 5 AM to 12 PM)
-                    }
-                    const [min, max] = data;
-                    if (isFinite(min) && isFinite(max)) {
-                      return [min - 60, max + 60];
-                    }
-                    return [300, 720];
-                  }}
-                  reversed={true}
-                  tickFormatter={(value) => {
-                    const h = Math.floor(value / 60) % 24;
-                    const m = value % 60;
-                    return `${h % 12 === 0 ? 12 : h % 12}:${m
-                      .toString()
-                      .padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-                  }}
-                  label={{
-                    value: "Wake Up Time",
-                    angle: 90,
-                    position: "insideRight",
-                    style: { textAnchor: "middle", fontSize: 14 },
-                  }}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "14px" }} />
-                <Bar
-                  yAxisId="left"
-                  dataKey="reading"
-                  name="Reading"
-                  stackId="a"
-                  fill="#82ca9d"
-                />
-                <Bar
-                  yAxisId="left"
-                  dataKey="hearing"
-                  name="Hearing"
-                  stackId="a"
-                  fill="#ffc658"
-                />
-                <Bar
-                  yAxisId="left"
-                  dataKey="study"
-                  name="Study"
-                  stackId="a"
-                  fill="#ff7300"
-                />
-                <Bar
-                  yAxisId="left"
-                  dataKey="seva"
-                  name="Seva"
-                  stackId="a"
-                  fill="#8884d8"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="wakeUp"
-                  name="Wake Up"
-                  stroke="#d82727"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 8 }}
-                  connectNulls
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <SadhanaChart data={chartData} />
           </div>
 
           {/* Calendar View */}
