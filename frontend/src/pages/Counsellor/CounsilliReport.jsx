@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { getCounsilliMonthlyReport } from "../../api/counsellor";
-import { formatToDDMMYYYY, getMonthOptions } from "../../utils/formatDate"; // Updated import
-import { parseTimeToMinutes } from "../../utils/parseTime";
+import { formatToDDMMYYYY, getMonthOptions } from "../../utils/formatDate";
 import {
-  // ...existing code...
+  parseTimeToMinutes,
+  parseDurationToMinutes,
+} from "../../utils/parseTime";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -34,6 +43,19 @@ export default function CounsilliReport() {
     fetchReport();
   }, [id, month]);
 
+  const chartData = useMemo(() => {
+    if (!report?.sadhanaCards) return [];
+    return report.sadhanaCards
+      .map((card) => ({
+        day: new Date(card.date).getDate(),
+        wakeUp: parseTimeToMinutes(card.wakeUp),
+        reading: parseDurationToMinutes(card.reading),
+        hearing: parseDurationToMinutes(card.hearing),
+        study: parseDurationToMinutes(card.study),
+      }))
+      .sort((a, b) => a.day - b.day);
+  }, [report]);
+
   // Prepare calendar data
   const [year, monthNum] = month.split("-");
   const daysInMonth = getDaysInMonth(Number(year), Number(monthNum));
@@ -44,6 +66,46 @@ export default function CounsilliReport() {
       cardByDay[day] = card;
     });
   }
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const formatMinutesToTime = (mins) => {
+        if (mins === null) return "N/A";
+        const hours = Math.floor(mins / 60) % 24;
+        const minutes = mins % 60;
+        const period = hours >= 12 ? "PM" : "AM";
+        const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+        return `${displayHours}:${minutes
+          .toString()
+          .padStart(2, "0")} ${period}`;
+      };
+      const formatMinutesToDuration = (mins) => {
+        if (mins === null || isNaN(mins)) return "N/A";
+        const hours = Math.floor(mins / 60);
+        const minutes = mins % 60;
+        if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h`;
+        return `${minutes}m`;
+      };
+
+      return (
+        <div className="bg-white/80 backdrop-blur-sm p-4 border border-gray-300 rounded-lg shadow-lg">
+          <p className="font-bold text-gray-800">{`Day ${label}`}</p>
+          {payload.map((p) => (
+            <p key={p.name} style={{ color: p.color }}>
+              {`${p.name}: `}
+              <strong>
+                {p.dataKey === "wakeUp"
+                  ? formatMinutesToTime(p.value)
+                  : formatMinutesToDuration(p.value)}
+              </strong>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
@@ -76,6 +138,91 @@ export default function CounsilliReport() {
         </div>
       ) : report && report.sadhanaCards.length > 0 ? (
         <>
+          {/* Chart Section */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Monthly Activity Trends
+            </h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis
+                  yAxisId="left"
+                  label={{
+                    value: "Duration (minutes)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { textAnchor: "middle", fontSize: 14 },
+                  }}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={["dataMin - 60", "dataMax + 60"]}
+                  reversed={true}
+                  tickFormatter={(value) => {
+                    const h = Math.floor(value / 60) % 24;
+                    const m = value % 60;
+                    return `${h % 12 === 0 ? 12 : h % 12}:${m
+                      .toString()
+                      .padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+                  }}
+                  label={{
+                    value: "Wake Up Time",
+                    angle: 90,
+                    position: "insideRight",
+                    style: { textAnchor: "middle", fontSize: 14 },
+                  }}
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: "14px" }} />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="wakeUp"
+                  name="Wake Up"
+                  stroke="#8884d8"
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }}
+                  connectNulls
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="reading"
+                  name="Reading"
+                  stroke="#82ca9d"
+                  strokeWidth={2}
+                  connectNulls
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="hearing"
+                  name="Hearing"
+                  stroke="#ffc658"
+                  strokeWidth={2}
+                  connectNulls
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="study"
+                  name="Study"
+                  stroke="#ff7300"
+                  strokeWidth={2}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
           {/* Calendar View */}
           <div className="bg-white rounded-xl p-6 shadow-lg mb-8">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
