@@ -170,15 +170,19 @@ export default function Register() {
           </div>
         )}
 
-        <p className="text-sm text-center text-gray-600">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            Login here
-          </Link>
-        </p>
+        <div className="text-sm text-center mt-4">
+          {step === 1 && (
+            <p>
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Login here
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form className="space-y-6" onSubmit={handleLogin}>
           <div className="relative">
             <input
               name="email"
@@ -65,18 +65,22 @@ export default function Login() {
               required
             />
           </div>
-          <div className="text-right">
-            <a href="#" className="text-sm text-blue-600 hover:underline">
-              Forgot Password?
-            </a>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {/* You can add a "Remember me" checkbox here if needed */}
+            </div>
           </div>
-          <button
-            type="submit"
-            className="w-full px-4 py-3 font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+
+          <div>
+            <button
+              type="submit"
+              className="w-full px-4 py-3 font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </div>
         </form>
         <p className="text-sm text-center text-gray-600">
           Don't have an account?{" "}
@@ -91,4 +95,3 @@ export default function Login() {
     </div>
   );
 }
-      
