@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { registerUser, verifyOtp, getCounsellors } from "../../api/auth";
 import { Link } from "react-router-dom";
+import { validatePassword } from "../../utils/validate";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -38,6 +39,14 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setMsg({ text: "" });
+
+    // Validate password strength
+    const passwordError = validatePassword(form.password);
+    if (passwordError) {
+      setMsg({ text: passwordError, type: "error" });
+      return;
+    }
+
     setLoading(true);
     try {
       await registerUser(form);
