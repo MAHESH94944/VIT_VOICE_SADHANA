@@ -46,17 +46,8 @@ export default function CounsilliReport() {
 
   const chartData = useMemo(() => {
     if (!report || !report.sadhanaCards || report.sadhanaCards.length === 0) {
-      // Return a default structure to prevent chart errors with empty data
-      return [
-        {
-          day: 1,
-          wakeUp: null,
-          reading: null,
-          hearing: null,
-          study: null,
-          seva: null,
-        },
-      ];
+      // Return an empty array. The `hasData` flag will prevent the chart from rendering.
+      return [];
     }
     return report.sadhanaCards
       .map((card) => ({
@@ -181,12 +172,15 @@ export default function CounsilliReport() {
                   yAxisId="right"
                   orientation="right"
                   domain={(data) => {
+                    // Guard against invalid data from recharts when dataset is empty
+                    if (!data || data[0] === undefined || data[1] === undefined) {
+                      return [300, 720]; // Default domain (e.g., 5 AM to 12 PM)
+                    }
                     const [min, max] = data;
-                    // Provide a default domain if min/max are not finite numbers
                     if (isFinite(min) && isFinite(max)) {
                       return [min - 60, max + 60];
                     }
-                    return [300, 720]; // Default e.g., 5 AM to 12 PM
+                    return [300, 720];
                   }}
                   reversed={true}
                   tickFormatter={(value) => {
