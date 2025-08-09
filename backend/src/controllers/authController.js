@@ -145,12 +145,13 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" } // Set token expiration to 7 days
     );
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site cookies in production
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
     res.json({ message: "Login successful", token });
   } catch (err) {
