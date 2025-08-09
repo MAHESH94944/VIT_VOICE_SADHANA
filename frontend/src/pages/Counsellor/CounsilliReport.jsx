@@ -45,7 +45,7 @@ export default function CounsilliReport() {
   }, [id, month]);
 
   const chartData = useMemo(() => {
-    if (!report?.sadhanaCards) return [];
+    if (!report || !report.sadhanaCards) return [];
     return report.sadhanaCards
       .map((card) => ({
         day: new Date(card.date).getDate(),
@@ -62,7 +62,7 @@ export default function CounsilliReport() {
   const [year, monthNum] = month.split("-");
   const daysInMonth = getDaysInMonth(Number(year), Number(monthNum));
   const cardByDay = {};
-  if (report?.sadhanaCards) {
+  if (report && report.sadhanaCards) {
     report.sadhanaCards.forEach((card) => {
       const day = new Date(card.date).getDate();
       cardByDay[day] = card;
@@ -109,6 +109,9 @@ export default function CounsilliReport() {
     return null;
   };
 
+  const hasData =
+    report && report.sadhanaCards && report.sadhanaCards.length > 0;
+
   return (
     <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -138,7 +141,7 @@ export default function CounsilliReport() {
         <div className="text-red-600 bg-red-100 p-4 rounded-lg shadow">
           {error}
         </div>
-      ) : report && report.sadhanaCards.length > 0 ? (
+      ) : hasData ? (
         <>
           {/* Chart Section */}
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg mb-8">
@@ -165,7 +168,14 @@ export default function CounsilliReport() {
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  domain={["dataMin - 60", "dataMax + 60"]}
+                  domain={(data) => {
+                    const [min, max] = data;
+                    // Provide a default domain if min/max are not finite numbers
+                    if (isFinite(min) && isFinite(max)) {
+                      return [min - 60, max + 60];
+                    }
+                    return [300, 720]; // Default e.g., 5 AM to 12 PM
+                  }}
                   reversed={true}
                   tickFormatter={(value) => {
                     const h = Math.floor(value / 60) % 24;
