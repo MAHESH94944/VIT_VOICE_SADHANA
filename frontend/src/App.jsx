@@ -34,6 +34,14 @@ function ProtectedRoute({ children, role }) {
   return children;
 }
 
+// New: Public route component to redirect logged-in users
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 // New: role-aware dashboard redirect
 function DashboardRedirect() {
   const { user, loading } = useAuth();
@@ -218,9 +226,30 @@ function AppShell() {
               <div className="p-8 text-2xl">Welcome to VIT VOICE Sadhana</div>
             }
           />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/verify-otp"
+            element={
+              <PublicRoute>
+                <VerifyOTP />
+              </PublicRoute>
+            }
+          />
           {/* Counsilli routes */}
           <Route
             path="/counsilli/dashboard"
