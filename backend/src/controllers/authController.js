@@ -95,6 +95,17 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.getCounsellors = async (req, res) => {
+  try {
+    const counsellors = await User.find({ role: "counsellor" }).select("name");
+    res.json(counsellors);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to fetch counsellors", error: err.message });
+  }
+};
+
 exports.verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {

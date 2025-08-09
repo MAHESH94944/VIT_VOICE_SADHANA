@@ -5,6 +5,11 @@ export async function registerUser(userData) {
   return res.data;
 }
 
+export async function getCounsellors() {
+  const res = await api.get("/auth/counsellors");
+  return res.data;
+}
+
 export async function verifyOtp(email, otp) {
   const res = await api.post("/auth/verify-otp", { email, otp });
   return res.data;

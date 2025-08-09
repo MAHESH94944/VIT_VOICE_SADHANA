@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { registerUser, verifyOtp } from "../../api/auth";
+import React, { useState, useEffect } from "react";
+import { registerUser, verifyOtp, getCounsellors } from "../../api/auth";
 import { Link } from "react-router-dom";
 
 export default function Register() {
@@ -10,10 +10,26 @@ export default function Register() {
     role: "counsilli",
     counsellorName: "",
   });
+  const [counsellors, setCounsellors] = useState([]);
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [msg, setMsg] = useState({ text: "", type: "error" });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchCounsellors() {
+      try {
+        const data = await getCounsellors();
+        setCounsellors(data);
+        if (data.length > 0) {
+          setForm((prev) => ({ ...prev, counsellorName: data[0].name }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch counsellors", err);
+      }
+    }
+    fetchCounsellors();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -118,14 +134,22 @@ export default function Register() {
               <option value="counsellor">Counsellor</option>
             </select>
             {form.role === "counsilli" && (
-              <input
+              <select
                 name="counsellorName"
-                placeholder="Counsellor Name"
                 value={form.counsellorName}
                 onChange={handleChange}
                 className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 required
-              />
+              >
+                <option value="" disabled>
+                  Select your Counsellor
+                </option>
+                {counsellors.map((c) => (
+                  <option key={c._id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             )}
             <button
               type="submit"

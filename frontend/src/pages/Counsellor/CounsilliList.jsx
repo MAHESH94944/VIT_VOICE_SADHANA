@@ -53,75 +53,132 @@ export default function CounsilliList() {
       ) : error ? (
         <div className="text-red-600 bg-red-100 p-4 rounded-lg">{error}</div>
       ) : (
-        <Card className="overflow-hidden p-0">
-          <table className="w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Last Submission
-                </th>
-                <th className="p-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center text-gray-500 p-6">
-                    No counsillis found.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((c) => (
-                  <tr key={c._id} className="hover:bg-gray-50 transition">
-                    <td className="p-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img
-                          className="h-10 w-10 rounded-full"
-                          src={`https://ui-avatars.com/api/?name=${c.name}&background=random`}
-                          alt=""
-                          loading="lazy"
-                        />
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {c.name}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 whitespace-nowrap text-sm text-gray-500">
-                      {c.email}
-                    </td>
-                    <td className="p-4 whitespace-nowrap text-sm text-gray-500">
-                      {c.lastSubmission ? (
-                        formatToDDMMYYYY(c.lastSubmission)
-                      ) : (
-                        <span className="text-gray-400">Never</span>
-                      )}
-                    </td>
-                    <td className="p-4 whitespace-nowrap text-center">
-                      <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                        onClick={() =>
-                          navigate(`/counsellor/counsilli/${c._id}/report`)
-                        }
-                      >
-                        View Report
-                      </button>
-                    </td>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <Card className="overflow-hidden p-0">
+              <table className="w-full">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Last Submission
+                    </th>
+                    <th className="p-4 text-center text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </Card>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center text-gray-500 p-6">
+                        No counsillis found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((c) => (
+                      <tr key={c._id} className="hover:bg-gray-50 transition">
+                        <td className="p-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <img
+                              className="h-10 w-10 rounded-full"
+                              src={`https://ui-avatars.com/api/?name=${c.name}&background=random`}
+                              alt=""
+                              loading="lazy"
+                            />
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {c.name}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 whitespace-nowrap text-sm text-gray-500">
+                          {c.email}
+                        </td>
+                        <td className="p-4 whitespace-nowrap text-sm text-gray-500">
+                          {c.lastSubmission ? (
+                            formatToDDMMYYYY(c.lastSubmission)
+                          ) : (
+                            <span className="text-gray-400">Never</span>
+                          )}
+                        </td>
+                        <td className="p-4 whitespace-nowrap text-center">
+                          <button
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                            onClick={() =>
+                              navigate(`/counsellor/counsilli/${c._id}/report`)
+                            }
+                          >
+                            View Report
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </Card>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filtered.length === 0 ? (
+              <Card>
+                <p className="text-center text-gray-500 p-6">
+                  No counsillis found.
+                </p>
+              </Card>
+            ) : (
+              filtered.map((c) => (
+                <Card key={c._id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <img
+                        className="h-10 w-10 rounded-full"
+                        src={`https://ui-avatars.com/api/?name=${c.name}&background=random`}
+                        alt=""
+                        loading="lazy"
+                      />
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {c.name}
+                        </div>
+                        <div className="text-xs text-gray-500">{c.email}</div>
+                      </div>
+                    </div>
+                    <button
+                      className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors text-xs font-medium"
+                      onClick={() =>
+                        navigate(`/counsellor/counsilli/${c._id}/report`)
+                      }
+                    >
+                      Report
+                    </button>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-500">
+                      Last Submission:{" "}
+                      <span className="font-medium text-gray-700">
+                        {c.lastSubmission ? (
+                          formatToDDMMYYYY(c.lastSubmission)
+                        ) : (
+                          <span className="text-gray-400">Never</span>
+                        )}
+                      </span>
+                    </p>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </>
       )}
     </div>
   );
