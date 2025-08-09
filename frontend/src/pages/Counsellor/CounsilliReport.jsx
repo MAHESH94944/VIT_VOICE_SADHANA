@@ -45,7 +45,19 @@ export default function CounsilliReport() {
   }, [id, month]);
 
   const chartData = useMemo(() => {
-    if (!report || !report.sadhanaCards) return [];
+    if (!report || !report.sadhanaCards || report.sadhanaCards.length === 0) {
+      // Return a default structure to prevent chart errors with empty data
+      return [
+        {
+          day: 1,
+          wakeUp: null,
+          reading: null,
+          hearing: null,
+          study: null,
+          seva: null,
+        },
+      ];
+    }
     return report.sadhanaCards
       .map((card) => ({
         day: new Date(card.date).getDate(),
