@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react";
 import { loginUser, logoutUser, getMe } from "../api/auth";
 
@@ -13,8 +14,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore session on app load
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getMe();
@@ -24,11 +24,11 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   const login = async (email, password) => {
     await loginUser({ email, password });
@@ -38,14 +38,17 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await logoutUser();
-    } finally {
-      setUser(null);
+      await refresh(); // Re-check auth state to confirm logout
+    } catch (err) {
+      console.error("Logout failed:", err);
+      // Even if logout API fails, force a refresh to sync state
+      await refresh();
     }
   };
 
   const value = useMemo(
     () => ({ user, setUser, loading, login, logout, refresh }),
-    [user, loading]
+    [user, loading, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
