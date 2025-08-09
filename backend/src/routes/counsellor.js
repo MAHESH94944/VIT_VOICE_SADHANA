@@ -17,15 +17,3 @@ router.get(
 );
 
 module.exports = router;
-router.get(
-  "/counsilli/:id/sadhana",
-  authMiddleware,
-  counsellorController.counsilliSadhanaReport
-);
-router.get(
-  "/counsilli/:id/sadhana/:month",
-  authMiddleware,
-  counsellorController.counsilliMonthlyReport
-);
-
-module.exports = router;

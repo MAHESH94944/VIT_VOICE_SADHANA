@@ -20,4 +20,3 @@ const sadhanaSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Sadhana", sadhanaSchema);
-module.exports = mongoose.model("Sadhana", sadhanaSchema);
