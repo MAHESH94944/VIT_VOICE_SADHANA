@@ -85,7 +85,7 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
 The production backend is deployed at `https://vit-voice-sadhana.onrender.com`.
 The production frontend is deployed at `https://vit-voice-sadhana-1.onrender.com`.
 
-**Important:** When deploying the backend to a service like Render, you must set the following environment variables in their dashboard:
+**Important (Backend on Render):** When deploying the backend to a service like Render, you must set the following environment variables in their dashboard:
 
 - `NODE_ENV` to `production`
 - `FRONTEND_URL` to `https://vit-voice-sadhana-1.onrender.com`
@@ -93,20 +93,7 @@ The production frontend is deployed at `https://vit-voice-sadhana-1.onrender.com
 
 Render will automatically use the `npm start` command to run your application.
 
-When deploying the frontend to a service like Vercel or Netlify, you must set up a rewrite rule to proxy requests from `/api` to the production backend URL to avoid CORS issues.
-
-**Example (Vercel `vercel.json`):**
-
-```json
-{
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://vit-voice-sadhana.onrender.com/api/:path*"
-    }
-  ]
-}
-```
+**Important (Frontend on Vercel):** When deploying the frontend to Vercel, no special configuration is needed in the Vercel dashboard. The `vercel.json` file in the `frontend` directory will automatically handle proxying API requests to your Render backend.
 
 ---
 
