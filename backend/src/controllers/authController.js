@@ -136,7 +136,11 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site cookies in production
+    });
     res.json({ message: "Login successful", token });
   } catch (err) {
     res.status(500).json({ message: "Login failed", error: err.message });

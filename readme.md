@@ -50,6 +50,7 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
     ```
 3.  Create a `.env` file in the `backend` directory and add the following environment variables:
     ```env
+    NODE_ENV=development
     PORT=3000
     MONGODB_URI=<YOUR_MONGODB_CONNECTION_STRING>
     JWT_SECRET=<YOUR_JWT_SECRET>
@@ -57,9 +58,9 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
     EMAIL_PASS=<YOUR_GMAIL_APP_PASSWORD>
     FRONTEND_URL=http://localhost:5173
     ```
-4.  Start the backend server:
+4.  Start the backend server for development (with auto-restarting):
     ```bash
-    npm start
+    npm run dev
     ```
     The server will be running at `http://localhost:3000`.
 
@@ -83,6 +84,14 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
 
 The production backend is deployed at `https://vit-voice-sadhana.onrender.com`.
 The production frontend is deployed at `https://vit-voice-sadhana-1.onrender.com`.
+
+**Important:** When deploying the backend to a service like Render, you must set the following environment variables in their dashboard:
+
+- `NODE_ENV` to `production`
+- `FRONTEND_URL` to `https://vit-voice-sadhana-1.onrender.com`
+- All other secrets (`MONGODB_URI`, `JWT_SECRET`, etc.)
+
+Render will automatically use the `npm start` command to run your application.
 
 When deploying the frontend to a service like Vercel or Netlify, you must set up a rewrite rule to proxy requests from `/api` to the production backend URL to avoid CORS issues.
 
