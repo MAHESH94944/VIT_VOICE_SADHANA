@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "https://vit-voice-sadhana.onrender.com";
 
 export async function apiFetch(path, options = {}) {
   return fetch(`${API_BASE}${path}`, {
