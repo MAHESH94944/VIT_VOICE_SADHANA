@@ -5,15 +5,18 @@ import PageTitle from "../../components/common/PageTitle";
 import Card from "../../components/common/Card";
 
 // Helper arrays for dropdowns
-const timeOptions = Array.from({ length: 48 }, (_, i) => {
-  const totalMinutes = i * 30;
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const period = hours >= 12 ? "PM" : "AM";
-  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-  const displayMinutes = minutes.toString().padStart(2, "0");
-  return `${displayHours}:${displayMinutes} ${period}`;
-});
+const timeOptions = [
+  ...Array.from({ length: 48 }, (_, i) => {
+    const totalMinutes = i * 30;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+    const displayMinutes = minutes.toString().padStart(2, "0");
+    return `${displayHours}:${displayMinutes} ${period}`;
+  }),
+  "Other...", // Add custom option
+];
 
 const durationOptions = [
   "0 min",
@@ -44,8 +47,11 @@ export default function AddSadhana() {
     seva: "0 min",
     concern: "",
   });
-  // New state for custom duration values
-  const [customDurations, setCustomDurations] = useState({
+  // New state for ALL custom values
+  const [customValues, setCustomValues] = useState({
+    wakeUp: "",
+    japaCompleted: "",
+    timeToBed: "",
     dayRest: "",
     hearing: "",
     reading: "",
@@ -60,9 +66,9 @@ export default function AddSadhana() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // New handler for custom input fields
-  const handleCustomChange = (e) => {
-    setCustomDurations({ ...customDurations, [e.target.name]: e.target.value });
+  // New handler for ALL custom input fields
+  const handleCustomValueChange = (e) => {
+    setCustomValues({ ...customValues, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -72,9 +78,9 @@ export default function AddSadhana() {
 
     // Prepare form data, using custom values if "Other..." is selected
     const dataToSend = { ...form };
-    for (const key in customDurations) {
+    for (const key in customValues) {
       if (form[key] === "Other...") {
-        dataToSend[key] = customDurations[key];
+        dataToSend[key] = customValues[key];
       }
     }
 
@@ -87,7 +93,7 @@ export default function AddSadhana() {
     setLoading(false);
   };
 
-  const renderSelect = (name, label, options, isDuration = false) => (
+  const renderSelect = (name, label, options, isCustomizable = false) => (
     <div>
       <label
         htmlFor={name}
@@ -108,13 +114,17 @@ export default function AddSadhana() {
           </option>
         ))}
       </select>
-      {isDuration && form[name] === "Other..." && (
+      {isCustomizable && form[name] === "Other..." && (
         <input
           type="text"
           name={name}
-          value={customDurations[name]}
-          onChange={handleCustomChange}
-          placeholder="e.g., 1 hr 10 min"
+          value={customValues[name]}
+          onChange={handleCustomValueChange}
+          placeholder={
+            name.includes("Time") || name.includes("wakeUp")
+              ? "e.g., 5:45 AM"
+              : "e.g., 1 hr 10 min"
+          }
           className="w-full mt-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           required
         />
@@ -154,13 +164,18 @@ export default function AddSadhana() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {renderSelect("wakeUp", "Wake Up Time", timeOptions)}
-            {renderSelect("japaCompleted", "Japa Completed By", timeOptions)}
+            {renderSelect("wakeUp", "Wake Up Time", timeOptions, true)}
+            {renderSelect(
+              "japaCompleted",
+              "Japa Completed By",
+              timeOptions,
+              true
+            )}
             {renderSelect("dayRest", "Day Rest", durationOptions, true)}
             {renderSelect("hearing", "Hearing", durationOptions, true)}
             {renderSelect("reading", "Reading", durationOptions, true)}
             {renderSelect("study", "Study", durationOptions, true)}
-            {renderSelect("timeToBed", "Time To Bed", timeOptions)}
+            {renderSelect("timeToBed", "Time To Bed", timeOptions, true)}
             {renderSelect("seva", "Seva", durationOptions, true)}
           </div>
 
