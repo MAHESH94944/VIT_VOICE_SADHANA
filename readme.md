@@ -21,7 +21,8 @@ A full-stack MERN application designed for members of VIT VOICE to track their d
   - React Router
   - Tailwind CSS
   - Axios
-  - Recharts (for graphs)
+  - Chart.js & react-chartjs-2 (for graphs)
+  - Swiper.js (for mobile carousel)
   - Vite (for development and bundling)
 - **Backend:**
   - Node.js

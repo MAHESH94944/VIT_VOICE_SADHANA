@@ -6,147 +6,263 @@ import {
   parseTimeToMinutes,
   parseDurationToMinutes,
 } from "../../utils/parseTime";
+import { Line } from "react-chartjs-2";
 import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-} from "recharts";
+  Filler,
+} from "chart.js";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
-// Helper component for the chart to ensure it only renders with valid data
-function SadhanaChart({ data }) {
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const formatMinutesToTime = (mins) => {
-        if (mins === null) return "N/A";
-        const hours = Math.floor(mins / 60) % 24;
-        const minutes = mins % 60;
-        const period = hours >= 12 ? "PM" : "AM";
-        const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-        return `${displayHours}:${minutes
-          .toString()
-          .padStart(2, "0")} ${period}`;
-      };
-      const formatMinutesToDuration = (mins) => {
-        if (mins === null || isNaN(mins)) return "N/A";
-        const hours = Math.floor(mins / 60);
-        const minutes = mins % 60;
-        if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
-        if (hours > 0) return `${hours}h`;
-        return `${minutes}m`;
-      };
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
-      return (
-        <div className="bg-white/80 backdrop-blur-sm p-4 border border-gray-300 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-800">{`Day ${label}`}</p>
-          {payload.map((p) => (
-            <p key={p.name} style={{ color: p.color }}>
-              {`${p.name}: `}
-              <strong>
-                {p.dataKey === "wakeUp"
-                  ? formatMinutesToTime(p.value)
-                  : formatMinutesToDuration(p.value)}
-              </strong>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+// --- Advanced Chart Component ---
+function SadhanaMetricChart({
+  title,
+  description,
+  yAxisLabel,
+  labels,
+  data,
+  color = "75, 192, 192",
+  isModal = false, // Add a prop to detect if it's in a modal
+}) {
+  const [infoVisible, setInfoVisible] = useState(false);
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        titleFont: { size: 14, weight: "bold" },
+        bodyFont: { size: 12 },
+        padding: 10,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            if (value === null) return "No Data";
+            if (
+              title.includes("Time") ||
+              title.includes("Rest") ||
+              title.includes("Wake Up")
+            )
+              return `Score: ${value.toFixed(0)}`;
+            return `${value.toFixed(0)} minutes`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: "rgba(200, 200, 200, 0.2)",
+        },
+        ticks: {
+          font: { size: 10 },
+        },
+        title: {
+          display: true,
+          text: yAxisLabel,
+          font: { size: 12, weight: "bold" },
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          autoSkip: false,
+          font: { size: 10 },
+          // Rotate labels vertically in modal to prevent overlap
+          maxRotation: isModal ? 90 : 45,
+          minRotation: isModal ? 90 : 0,
+        },
+        title: {
+          display: true,
+          text: "Day of the Month",
+          font: { size: 12, weight: "bold" },
+        },
+      },
+    },
+    elements: {
+      line: {
+        tension: 0.4,
+      },
+      point: {
+        radius: 2,
+        hoverRadius: 6,
+      },
+    },
+  };
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: title,
+        data,
+        borderColor: `rgb(${color})`,
+        backgroundColor: (context) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, `rgba(${color}, 0.5)`);
+          gradient.addColorStop(1, `rgba(${color}, 0)`);
+          return gradient;
+        },
+        fill: true,
+      },
+    ],
   };
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <ComposedChart
-        data={data}
-        margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-        <YAxis
-          yAxisId="left"
-          domain={[0, "dataMax + 60"]}
-          label={{
-            value: "Duration (minutes)",
-            angle: -90,
-            position: "insideLeft",
-            style: { textAnchor: "middle", fontSize: 14 },
-          }}
-          tick={{ fontSize: 12 }}
-        />
-        <YAxis
-          yAxisId="right"
-          orientation="right"
-          domain={[300, 720]}
-          reversed={true}
-          tickFormatter={(value) => {
-            const h = Math.floor(value / 60) % 24;
-            const m = value % 60;
-            return `${h % 12 === 0 ? 12 : h % 12}:${m
-              .toString()
-              .padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-          }}
-          label={{
-            value: "Wake Up Time",
-            angle: 90,
-            position: "insideRight",
-            style: { textAnchor: "middle", fontSize: 14 },
-          }}
-          tick={{ fontSize: 12 }}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend wrapperStyle={{ fontSize: "14px" }} />
-        <Bar
-          yAxisId="left"
-          dataKey="reading"
-          name="Reading"
-          stackId="a"
-          fill="#82ca9d"
-        />
-        <Bar
-          yAxisId="left"
-          dataKey="hearing"
-          name="Hearing"
-          stackId="a"
-          fill="#ffc658"
-        />
-        <Bar
-          yAxisId="left"
-          dataKey="study"
-          name="Study"
-          stackId="a"
-          fill="#ff7300"
-        />
-        <Bar
-          yAxisId="left"
-          dataKey="seva"
-          name="Seva"
-          stackId="a"
-          fill="#8884d8"
-        />
-        <Line
-          yAxisId="right"
-          type="monotone"
-          dataKey="wakeUp"
-          name="Wake Up"
-          stroke="#d82727"
-          strokeWidth={3}
-          dot={{ r: 4 }}
-          activeDot={{ r: 8 }}
-          connectNulls
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
+    <div
+      className={`bg-white p-4 rounded-xl shadow-lg flex flex-col ring-1 ring-gray-900/5 ${
+        isModal ? "h-full w-full" : "h-80"
+      }`}
+    >
+      <div className="relative z-10 flex items-center justify-center mb-2">
+        <h4 className="text-md font-semibold text-gray-700 text-center">
+          {title}
+        </h4>
+        {description && (
+          <div
+            className="relative flex items-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              setInfoVisible((v) => !v);
+            }}
+          >
+            <svg
+              className="w-4 h-4 ml-1.5 text-gray-400 cursor-help"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <div
+              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-gray-800 text-white text-xs rounded-lg p-3 transition-opacity duration-300 pointer-events-none z-50 ${
+                infoVisible ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {description}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex-grow">
+        <Line options={chartOptions} data={chartData} />
+      </div>
+    </div>
   );
 }
 
 function getDaysInMonth(year, month) {
   return new Date(year, month, 0).getDate();
+}
+
+// --- Modal for Expanded Chart View ---
+function ChartModal({ chartProps, onClose }) {
+  const isMobile = window.innerWidth < 768;
+
+  // Special full-screen, rotated modal for mobile
+  if (isMobile) {
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50"
+        onClick={onClose}
+      >
+        <div className="relative w-screen h-screen flex items-center justify-center">
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 text-white hover:text-gray-300 z-20 bg-gray-700 rounded-full p-2"
+            aria-label="Close chart"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          {/* This container is rotated to simulate landscape view */}
+          <div className="w-[95vh] h-[90vw] transform rotate-90 p-4">
+            <SadhanaMetricChart {...chartProps} isModal={true} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard modal for desktop
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[75vh] relative flex flex-col p-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 z-10 bg-gray-100 rounded-full p-1"
+          aria-label="Close chart"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <SadhanaMetricChart {...chartProps} isModal={true} />
+      </div>
+    </div>
+  );
 }
 
 export default function CounsilliReport() {
@@ -155,6 +271,7 @@ export default function CounsilliReport() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedChart, setExpandedChart] = useState(null);
 
   useEffect(() => {
     async function fetchReport() {
@@ -171,21 +288,56 @@ export default function CounsilliReport() {
     fetchReport();
   }, [id, month]);
 
-  const chartData = useMemo(() => {
-    if (!report || !report.sadhanaCards || report.sadhanaCards.length === 0) {
-      return null;
-    }
-    return report.sadhanaCards
-      .map((card) => ({
-        day: new Date(card.date).getDate(),
-        wakeUp: parseTimeToMinutes(card.wakeUp),
-        reading: parseDurationToMinutes(card.reading) || 0,
-        hearing: parseDurationToMinutes(card.hearing) || 0,
-        study: parseDurationToMinutes(card.study) || 0,
-        seva: parseDurationToMinutes(card.seva) || 0,
-      }))
-      .sort((a, b) => a.day - b.day);
-  }, [report]);
+  const processedData = useMemo(() => {
+    if (!report?.sadhanaCards || report.sadhanaCards.length === 0) return null;
+
+    const dataByDay = new Map();
+    report.sadhanaCards.forEach((card) => {
+      const day = new Date(card.date).getDate();
+      dataByDay.set(day, card);
+    });
+
+    const labels = Array.from(
+      { length: getDaysInMonth(...month.split("-")) },
+      (_, i) => i + 1
+    );
+
+    const getChartData = (key, parser, inverted = false, maxVal = 120) => {
+      return labels.map((day) => {
+        const card = dataByDay.get(day);
+        let val = card ? parser(card[key]) : null;
+
+        if (val === null) return null;
+
+        if (inverted) {
+          // Special handling for bedtime wrap-around (e.g., 1 AM is later than 11 PM)
+          if (key === "timeToBed" && val < 240) {
+            // Treat times before 4 AM as "late"
+            val += 1440;
+          }
+          return Math.max(0, maxVal - val);
+        }
+        return val;
+      });
+    };
+
+    return {
+      labels,
+      wakeUp: getChartData("wakeUp", parseTimeToMinutes, true, 720), // Invert against 12 PM
+      japaCompleted: getChartData(
+        "japaCompleted",
+        parseTimeToMinutes,
+        true,
+        1320
+      ), // Invert against 10 PM
+      timeToBed: getChartData("timeToBed", parseTimeToMinutes, true, 1560), // Invert against 2 AM (1440 + 120)
+      dayRest: getChartData("dayRest", parseDurationToMinutes, true, 120), // Invert against 120 min
+      hearing: getChartData("hearing", parseDurationToMinutes),
+      reading: getChartData("reading", parseDurationToMinutes),
+      study: getChartData("study", parseDurationToMinutes),
+      seva: getChartData("seva", parseDurationToMinutes),
+    };
+  }, [report, month]);
 
   // Prepare calendar data
   const [year, monthNum] = month.split("-");
@@ -198,10 +350,85 @@ export default function CounsilliReport() {
     });
   }
 
-  const hasData = chartData !== null;
+  const hasData = processedData !== null;
+
+  const charts = hasData
+    ? [
+        {
+          title: "Wake Up Time",
+          description:
+            "Y-Axis: Performance Score (Higher is better). X-Axis: Day of the month. A higher point means an earlier wake-up time.",
+          data: processedData.wakeUp,
+          yAxisLabel: "Performance Score",
+          color: "54, 162, 235",
+        },
+        {
+          title: "Japa Time",
+          description:
+            "Y-Axis: Performance Score (Higher is better). X-Axis: Day of the month. A higher point means japa was completed earlier.",
+          data: processedData.japaCompleted,
+          yAxisLabel: "Performance Score",
+          color: "255, 99, 132",
+        },
+        {
+          title: "Time to Bed",
+          description:
+            "Y-Axis: Performance Score (Higher is better). X-Axis: Day of the month. A higher point means an earlier bedtime.",
+          data: processedData.timeToBed,
+          yAxisLabel: "Performance Score",
+          color: "153, 102, 255",
+        },
+        {
+          title: "Day Rest",
+          description:
+            "Y-Axis: Performance Score (Higher is better). X-Axis: Day of the month. A higher point means less time was spent resting.",
+          data: processedData.dayRest,
+          yAxisLabel: "Performance Score",
+          color: "255, 159, 64",
+        },
+        {
+          title: "Hearing",
+          description:
+            "Y-Axis: Duration in Minutes. X-Axis: Day of the month. A higher point means more time was spent hearing.",
+          data: processedData.hearing,
+          yAxisLabel: "Minutes",
+          color: "75, 192, 192",
+        },
+        {
+          title: "Reading",
+          description:
+            "Y-Axis: Duration in Minutes. X-Axis: Day of the month. A higher point means more time was spent reading.",
+          data: processedData.reading,
+          yAxisLabel: "Minutes",
+          color: "255, 205, 86",
+        },
+        {
+          title: "Study",
+          description:
+            "Y-Axis: Duration in Minutes. X-Axis: Day of the month. A higher point means more time was spent studying.",
+          data: processedData.study,
+          yAxisLabel: "Minutes",
+          color: "201, 203, 207",
+        },
+        {
+          title: "Seva",
+          description:
+            "Y-Axis: Duration in Minutes. X-Axis: Day of the month. A higher point means more time was spent on seva.",
+          data: processedData.seva,
+          yAxisLabel: "Minutes",
+          color: "46, 204, 113",
+        },
+      ]
+    : [];
 
   return (
     <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
+      {expandedChart && (
+        <ChartModal
+          chartProps={{ ...expandedChart, labels: processedData.labels }}
+          onClose={() => setExpandedChart(null)}
+        />
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h2 className="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
           Counsilli Sadhana Report
@@ -232,11 +459,44 @@ export default function CounsilliReport() {
       ) : hasData ? (
         <>
           {/* Chart Section */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg mb-8">
+          <div className="mb-8">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
               Monthly Activity Trends
             </h3>
-            <SadhanaChart data={chartData} />
+            {/* Desktop Grid View */}
+            <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {charts.map((chartProps) => (
+                <SadhanaMetricChart
+                  key={chartProps.title}
+                  labels={processedData.labels}
+                  {...chartProps}
+                />
+              ))}
+            </div>
+            {/* Mobile Swiper View */}
+            <div className="md:hidden">
+              <Swiper
+                modules={[Navigation, Pagination]}
+                spaceBetween={20}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+                className="pb-10"
+              >
+                {charts.map((chartProps) => (
+                  <SwiperSlide
+                    key={chartProps.title}
+                    onClick={() => setExpandedChart(chartProps)}
+                    className="cursor-pointer"
+                  >
+                    <SadhanaMetricChart
+                      labels={processedData.labels}
+                      {...chartProps}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </div>
 
           {/* Calendar View */}
