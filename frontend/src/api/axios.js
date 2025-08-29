@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// Use the production URL when the app is built, otherwise use the local proxy
-const API_BASE_URL = import.meta.env.PROD
-  ? "https://vit-voice-sadhana.onrender.com/api"
-  : "/api";
+// Default to the hosted backend. You can override locally by creating
+// a `.env` and setting VITE_API_BASE (e.g. VITE_API_BASE=http://localhost:3000/api).
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE || "https://vit-voice-sadhana.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
