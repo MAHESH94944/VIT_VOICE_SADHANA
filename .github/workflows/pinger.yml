@@ -9,5 +9,8 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Curl request
-        run: curl -s https://vit-voice-sadhana.onrender.com || true
+      - name: Curl request with timestamp
+        run: |
+          echo "=== Ping started at $(date -u) UTC ==="
+          curl -i https://vit-voice-sadhana.onrender.com || true
+          echo "=== Ping finished at $(date -u) UTC ==="
