@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import PageTitle from "../../components/common/PageTitle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
+import { Helmet } from "react-helmet";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -31,9 +32,17 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl mx-auto mt-8 p-4">
+      <Helmet>
+        <title>Counsellor Dashboard | VIT VOICE Sadhana</title>
+        <meta
+          name="description"
+          content="Counsellor dashboard for managing assigned counsillis and viewing stats."
+        />
+      </Helmet>
       <img
         src="/Krishna_arjun.jpg"
         alt="Mahabharata Chariot"
+        loading="lazy"
         className="w-full max-h-96 md:max-h-[340px] object-contain rounded-xl shadow-lg mb-6 border-4 border-orange-200 mx-auto bg-white"
         style={{ objectPosition: "center top" }}
       />

@@ -23,6 +23,7 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { Helmet } from "react-helmet";
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +37,7 @@ ChartJS.register(
 );
 
 // --- Advanced Chart Component ---
-function SadhanaMetricChart({
+const SadhanaMetricChart = React.memo(function SadhanaMetricChart({
   title,
   description,
   yAxisLabel,
@@ -184,7 +185,7 @@ function SadhanaMetricChart({
       </div>
     </div>
   );
-}
+});
 
 function getDaysInMonth(year, month) {
   return new Date(year, month, 0).getDate();
@@ -422,7 +423,14 @@ export default function CounsilliReport() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen">
+    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen pb-32 md:pb-8">
+      <Helmet>
+        <title>Counsilli Sadhana Report | VIT VOICE Sadhana</title>
+        <meta
+          name="description"
+          content="Monthly sadhana report for counsilli with spiritual, dharmic UI and detailed analytics."
+        />
+      </Helmet>
       {expandedChart && (
         <ChartModal
           chartProps={{ ...expandedChart, labels: processedData.labels }}
@@ -615,7 +623,7 @@ export default function CounsilliReport() {
           <div className="md:hidden space-y-4">
             {report.sadhanaCards.map((card) => (
               <div key={card._id} className="bg-white p-4 rounded-lg shadow-md">
-                <h4 className="font-bold text-lg text-blue-600 mb-2">
+                <h4 className="font-bold text-lg text-orange-700 mb-2">
                   {formatToDDMMYYYY(card.date)}
                 </h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -662,8 +670,8 @@ export default function CounsilliReport() {
           </div>
         </>
       ) : (
-        <div className="text-center text-gray-500 bg-white p-8 rounded-lg shadow">
-          No sadhana cards found for this month.
+        <div className="text-center text-gray-500 py-10">
+          No data available for the selected month. Please try another month.
         </div>
       )}
     </div>
