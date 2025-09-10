@@ -133,7 +133,7 @@ export default function AddSadhana() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 p-4">
+    <div className="max-w-2xl mx-auto mt-8 p-4 pb-32 md:pb-8">
       <PageTitle
         title="Submit Sadhana Card"
         subtitle="Fill in your spiritual activities for the day."
