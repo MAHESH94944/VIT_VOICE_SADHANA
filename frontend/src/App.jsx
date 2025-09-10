@@ -10,6 +10,11 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoadingSpinner from "./components/common/LoadingSpinner";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 // Lazy load all page components
 const Register = lazy(() => import("./pages/Auth/Register"));
@@ -58,24 +63,27 @@ function DashboardRedirect() {
 function Navbar() {
   const { user, logout } = useAuth();
   const [open, setOpen] = React.useState(false);
+  // Only show on desktop
+  if (window.innerWidth < 768) return null;
   const linkCls = ({ isActive }) =>
     `relative px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${
       isActive
-        ? "text-white bg-gradient-to-r from-orange-500 to-yellow-400"
-        : "text-orange-100 hover:bg-orange-600 hover:text-white"
-    } after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:w-0 after:h-0.5 after:bg-white after:transition-all after:duration-300 ${
+        ? "text-white bg-gradient-to-r from-orange-400 to-yellow-300"
+        : "text-orange-900 hover:bg-orange-200 hover:text-orange-900"
+    } after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:w-0 after:h-0.5 after:bg-orange-700 after:transition-all after:duration-300 ${
       isActive
         ? "after:w-1/2 after:-translate-x-1/2"
         : "hover:after:w-1/2 hover:after:-translate-x-1/2"
     }`;
 
   return (
-    <header className="bg-gradient-to-r from-orange-600 to-yellow-400/90 backdrop-blur-sm text-white shadow-lg sticky top-0 z-50">
+    <header className="bg-gradient-to-r from-orange-200 to-yellow-100/90 backdrop-blur-sm text-orange-900 shadow-lg sticky top-0 z-50">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex items-center justify-between h-16">
           <Link
             to="/"
-            className="font-bold tracking-wide text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400"
+            className="font-bold tracking-wide text-xl text-orange-700 drop-shadow-sm"
+            style={{ letterSpacing: 2 }}
           >
             VIT VOICE Sadhana
           </Link>
@@ -233,12 +241,69 @@ function Navbar() {
   );
 }
 
+function BottomNav() {
+  const { user, logout } = useAuth();
+  if (!user) return null;
+  // Only show on mobile
+  if (window.innerWidth >= 768) return null;
+  const navItems =
+    user.role === "counsilli"
+      ? [
+          { to: "/dashboard", icon: <DashboardIcon />, label: "Dashboard" },
+          {
+            to: "/counsilli/add-sadhana",
+            icon: <AddCircleIcon />,
+            label: "Add",
+          },
+          {
+            to: "/counsilli/monthly-report",
+            icon: <AssessmentIcon />,
+            label: "Report",
+          },
+        ]
+      : [
+          { to: "/dashboard", icon: <DashboardIcon />, label: "Dashboard" },
+          {
+            to: "/counsellor/counsilli-list",
+            icon: <ListAltIcon />,
+            label: "List",
+          },
+        ];
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-orange-200 to-yellow-100 border-t border-orange-300 flex justify-around items-center h-16 shadow-2xl">
+      {navItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center text-xs font-semibold px-2 py-1 rounded-md transition-colors duration-200 ${
+              isActive
+                ? "text-orange-700"
+                : "text-orange-500 hover:text-orange-700"
+            }`
+          }
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </NavLink>
+      ))}
+      <button
+        onClick={logout}
+        className="flex flex-col items-center justify-center text-xs font-semibold px-2 py-1 rounded-md text-orange-500 hover:text-orange-700"
+      >
+        <LogoutIcon />
+        <span>Logout</span>
+      </button>
+    </nav>
+  );
+}
+
 function AppShell() {
   return (
     <BrowserRouter>
-      {/* replace old inline nav with Navbar */}
       <Navbar />
-      <main className="bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen">
+      <BottomNav />
+      <main className="bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen pb-20">
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<DashboardRedirect />} />
