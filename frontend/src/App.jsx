@@ -15,6 +15,8 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { HelmetProvider } from "react-helmet-async";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 // Responsive hook for mobile detection
 function useIsMobile() {
@@ -415,7 +417,11 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppShell />
+      <HelmetProvider>
+        <ErrorBoundary>
+          <AppShell />
+        </ErrorBoundary>
+      </HelmetProvider>
     </AuthProvider>
   );
 }
