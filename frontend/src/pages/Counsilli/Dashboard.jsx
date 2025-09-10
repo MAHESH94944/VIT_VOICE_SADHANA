@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getCounsilliDashboard } from "../../api/counsilli";
-import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/common/PageTitle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
@@ -10,7 +9,6 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [recent, setRecent] = useState([]);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
