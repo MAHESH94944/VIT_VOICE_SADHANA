@@ -16,6 +16,17 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
 
+// Responsive hook for mobile detection
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return isMobile;
+}
+
 // Lazy load all page components
 const Register = lazy(() => import("./pages/Auth/Register"));
 const Login = lazy(() => import("./pages/Auth/Login"));
@@ -63,8 +74,8 @@ function DashboardRedirect() {
 function Navbar() {
   const { user, logout } = useAuth();
   const [open, setOpen] = React.useState(false);
-  // Only show on desktop
-  if (window.innerWidth < 768) return null;
+  const isMobile = useIsMobile();
+  if (isMobile) return null;
   const linkCls = ({ isActive }) =>
     `relative px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${
       isActive
@@ -243,9 +254,8 @@ function Navbar() {
 
 function BottomNav() {
   const { user, logout } = useAuth();
-  if (!user) return null;
-  // Only show on mobile
-  if (window.innerWidth >= 768) return null;
+  const isMobile = useIsMobile();
+  if (!user || !isMobile) return null;
   const navItems =
     user.role === "counsilli"
       ? [
@@ -299,11 +309,16 @@ function BottomNav() {
 }
 
 function AppShell() {
+  const isMobile = useIsMobile();
   return (
     <BrowserRouter>
       <Navbar />
       <BottomNav />
-      <main className="bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen pb-20">
+      <main
+        className={`bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen ${
+          isMobile ? "pt-0" : "pt-0"
+        }`}
+      >
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<DashboardRedirect />} />

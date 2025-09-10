@@ -30,38 +30,45 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-4">
-      <PageTitle title="Counsellor Dashboard" subtitle={`Welcome, ${user?.name}!`} />
-
-      {loading ? (
-        <LoadingSpinner />
-      ) : error ? (
-        <div className="text-red-600 bg-red-100 p-4 rounded-lg">{error}</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="text-center">
-            <div className="text-5xl font-extrabold text-blue-600">
-              {stats.total}
-            </div>
-            <div className="text-lg text-gray-700 mt-2">
-              Total Counsillis Assigned
-            </div>
-          </Card>
-          <Card className="flex flex-col items-center justify-center">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Manage Your Counsillis
-            </h3>
-            <Link
-              to="/counsellor/counsilli-list"
-              className="w-full text-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
-            >
-              View Counsilli List
-            </Link>
-          </Card>
-        </div>
-      )}
+    <div className="max-w-5xl mx-auto mt-8 p-4">
+      <img
+        src="/Krishna_arjun.jpg"
+        alt="Mahabharata Chariot"
+        className="w-full max-h-96 md:max-h-[340px] object-contain rounded-xl shadow-lg mb-6 border-4 border-orange-200 mx-auto bg-white"
+        style={{ objectPosition: "center top" }}
+      />
+      <h1 className="text-3xl font-extrabold text-orange-800 mb-2 text-center drop-shadow-sm">
+        Counsellor Dashboard
+      </h1>
+      <div className="mt-8">
+        {loading ? (
+          <LoadingSpinner />
+        ) : error ? (
+          <div className="text-red-600 bg-red-100 p-4 rounded-lg">{error}</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="text-center">
+              <div className="text-5xl font-extrabold text-blue-600">
+                {stats.total}
+              </div>
+              <div className="text-lg text-gray-700 mt-2">
+                Total Counsillis Assigned
+              </div>
+            </Card>
+            <Card className="flex flex-col items-center justify-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Manage Your Counsillis
+              </h3>
+              <Link
+                to="/counsellor/counsilli-list"
+                className="w-full text-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
+              >
+                View Counsilli List
+              </Link>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-           
-         
