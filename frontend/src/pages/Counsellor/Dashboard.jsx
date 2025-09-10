@@ -56,21 +56,21 @@ export default function Dashboard() {
           <div className="text-red-600 bg-red-100 p-4 rounded-lg">{error}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="text-center">
-              <div className="text-5xl font-extrabold text-blue-600">
+            <Card className="text-center bg-gradient-to-br from-yellow-200 via-yellow-100 to-orange-100 border-2 border-orange-300 shadow-lg">
+              <div className="text-5xl font-extrabold text-orange-600 drop-shadow">
                 {stats.total}
               </div>
-              <div className="text-lg text-gray-700 mt-2">
+              <div className="text-lg text-orange-900 mt-2 font-semibold">
                 Total Counsillis Assigned
               </div>
             </Card>
-            <Card className="flex flex-col items-center justify-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            <Card className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-100 via-orange-50 to-orange-200 border-2 border-yellow-300 shadow-lg">
+              <h3 className="text-lg font-semibold text-orange-900 mb-4">
                 Manage Your Counsillis
               </h3>
               <Link
                 to="/counsellor/counsilli-list"
-                className="w-full text-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300"
+                className="w-full text-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg shadow hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
               >
                 View Counsilli List
               </Link>

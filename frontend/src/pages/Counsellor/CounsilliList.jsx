@@ -36,7 +36,7 @@ export default function CounsilliList() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 p-4">
+    <div className="max-w-5xl mx-auto mt-8 p-4 pb-32 md:pb-8">
       <PageTitle
         title="Your Counsillis"
         subtitle="View and manage reports for your assigned counsillis."
@@ -137,24 +137,28 @@ export default function CounsilliList() {
               </Card>
             ) : (
               filtered.map((c) => (
-                <Card key={c._id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src={`https://ui-avatars.com/api/?name=${c.name}&background=random`}
-                        alt=""
-                        loading="lazy"
-                      />
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {c.name}
-                        </div>
-                        <div className="text-xs text-gray-500">{c.email}</div>
+                <Card
+                  key={c._id}
+                  className="p-4 bg-yellow-50 border border-orange-100 rounded-xl shadow-sm"
+                >
+                  <div className="flex items-center">
+                    <img
+                      className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-orange-200"
+                      src={`https://ui-avatars.com/api/?name=${c.name}&background=random`}
+                      alt=""
+                      loading="lazy"
+                    />
+                    <div className="ml-4 flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-orange-900 break-words">
+                        {c.name}
+                      </div>
+                      <div className="text-xs text-orange-700 break-words whitespace-pre-line">
+                        {c.email}
                       </div>
                     </div>
                     <button
-                      className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors text-xs font-medium"
+                      className="ml-2 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-semibold shadow hover:from-yellow-500 hover:to-orange-500 transition-colors"
+                      style={{ minWidth: 70 }}
                       onClick={() =>
                         navigate(`/counsellor/counsilli/${c._id}/report`)
                       }
@@ -162,14 +166,14 @@ export default function CounsilliList() {
                       Report
                     </button>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-500">
+                  <div className="mt-3 pt-3 border-t border-orange-100">
+                    <p className="text-xs text-orange-800">
                       Last Submission:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-semibold text-orange-900">
                         {c.lastSubmission ? (
                           formatToDDMMYYYY(c.lastSubmission)
                         ) : (
-                          <span className="text-gray-400">Never</span>
+                          <span className="text-orange-400">Never</span>
                         )}
                       </span>
                     </p>
