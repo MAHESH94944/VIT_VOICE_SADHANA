@@ -28,7 +28,7 @@ export default function Dashboard() {
   }, [fetchDashboard]);
 
   return (
-    <div className="max-w-5xl mx-auto mt-4 px-2 sm:px-4 p-4 pb-32 md:pb-8">
+    <div className="max-w-5xl mx-auto mt-8 px-2 sm:px-4 p-4 pb-32 md:pb-8">
       {/* Page title centered on top */}
       <div className="flex flex-col items-center justify-center mb-4 sm:mb-6 -mt-2 sm:-mt-0">
         <PageTitle
