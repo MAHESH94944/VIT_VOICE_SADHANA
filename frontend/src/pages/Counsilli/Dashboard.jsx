@@ -30,7 +30,7 @@ export default function Dashboard() {
   }, [fetchDashboard]);
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-4">
+    <div className="max-w-5xl mx-auto mt-8 p-4 pb-32 md:pb-8">
       <div className="flex items-center justify-between mb-6">
         <PageTitle
           title="Your Dashboard"

@@ -413,7 +413,7 @@ export default function MonthlyReport() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
+    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen pb-32 md:pb-8">
       {expandedChart && (
         <ChartModal
           chartProps={{ ...expandedChart, labels: processedData.labels }}
