@@ -422,7 +422,7 @@ export default function CounsilliReport() {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
+    <div className="max-w-7xl mx-auto mt-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-orange-50 via-yellow-100 to-orange-100 min-h-screen">
       {expandedChart && (
         <ChartModal
           chartProps={{ ...expandedChart, labels: processedData.labels }}
@@ -430,15 +430,15 @@ export default function CounsilliReport() {
         />
       )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
-          Counsilli Sadhana Report
+        <h2 className="text-3xl font-bold text-orange-800 mb-4 sm:mb-0 flex items-center gap-2">
+          <span>🕉️</span> Counsilli Sadhana Report
         </h2>
         <div className="flex gap-4 items-center bg-white p-3 rounded-lg shadow-sm">
           <label className="font-semibold text-gray-700">Select Month:</label>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-orange-400 focus:outline-none"
           >
             {getMonthOptions().map((opt) => (
               <option key={opt.value} value={opt.value}>
