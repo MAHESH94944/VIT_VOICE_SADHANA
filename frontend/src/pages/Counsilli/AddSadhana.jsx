@@ -199,10 +199,9 @@ export default function AddSadhana() {
 
           <button
             type="submit"
-            className="w-full px-4 py-3 font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            disabled={loading}
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
           >
-            {loading ? "Submitting..." : "Submit Sadhana"}
+            Submit Sadhana
           </button>
         </form>
       </Card>
