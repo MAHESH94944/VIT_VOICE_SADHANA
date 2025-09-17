@@ -4,9 +4,7 @@ const User = require("../models/User");
 exports.dashboard = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const user = await User.findById(userId).select(
-      "-password -otp -otpExpires"
-    );
+    const user = await User.findById(userId).select("-password");
     // Add role check
     if (!user || user.role !== "counsilli") {
       return res.status(403).json({ message: "Access denied" });
@@ -108,3 +106,4 @@ exports.monthlyReport = async (req, res) => {
       .json({ message: "Failed to fetch monthly report", error: err.message });
   }
 };
+

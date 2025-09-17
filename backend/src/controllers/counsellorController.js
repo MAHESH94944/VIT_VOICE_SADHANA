@@ -6,9 +6,7 @@ const mongoose = require("mongoose");
 exports.dashboard = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const user = await User.findById(userId).select(
-      "-password -otp -otpExpires"
-    );
+    const user = await User.findById(userId).select("-password");
     if (!user || user.role !== "counsellor") {
       return res.status(403).json({ message: "Access denied" });
     }

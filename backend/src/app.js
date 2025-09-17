@@ -6,28 +6,28 @@ const counsilliRoutes = require("./routes/counsilli");
 const counsellorRoutes = require("./routes/counsellor");
 const app = express();
 
+// Only allow the Vercel frontend (or FRONTEND_URL from env)
 const allowedOrigins = [
-  "https://vit-voice-sadhana.vercel.app", // Old Vercel deployment
-  "http://localhost:5173", // Local development
-  process.env.FRONTEND_URL, // Production frontend from .env
-].filter(Boolean); // Filter out undefined values
+  process.env.FRONTEND_URL || "https://vit-voice-sadhana.vercel.app",
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl requests)
+      // allow requests with no origin (curl, mobile, server-to-server)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
       }
-      return callback(null, true);
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
+      return callback(new Error(msg), false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 
