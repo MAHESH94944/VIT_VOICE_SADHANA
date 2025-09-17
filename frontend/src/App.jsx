@@ -326,7 +326,8 @@ function AppShell() {
               path="/register"
               element={
                 <PublicRoute>
-                  <Register />
+                  {/* use the Login page for register route to keep single auth page */}
+                  <Login />
                 </PublicRoute>
               }
             />

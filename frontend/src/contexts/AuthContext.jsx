@@ -35,19 +35,40 @@ export function AuthProvider({ children }) {
     await refresh();
   };
 
+  // New: Google login flow
+  const loginWithGoogle = async ({ idToken, role, counsellorName }) => {
+    // send idToken to backend; backend may respond { needRole: true, email, name }
+    const resp = await fetch("/api/auth/google-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ idToken, role, counsellorName }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      throw new Error(data.message || "Google login failed");
+    }
+    // If backend indicates role is required, return that info so UI can prompt
+    if (data.needRole) {
+      return { needRole: true, email: data.email, name: data.name };
+    }
+    // successful login -> refresh user state
+    await refresh();
+    return { success: true };
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
-      await refresh(); // Re-check auth state to confirm logout
+      await refresh();
     } catch (err) {
       console.error("Logout failed:", err);
-      // Even if logout API fails, force a refresh to sync state
       await refresh();
     }
   };
 
   const value = useMemo(
-    () => ({ user, setUser, loading, login, logout, refresh }),
+    () => ({ user, setUser, loading, login, logout, refresh, loginWithGoogle }),
     [user, loading, refresh]
   );
 
