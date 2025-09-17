@@ -6,9 +6,10 @@ const counsilliRoutes = require("./routes/counsilli");
 const counsellorRoutes = require("./routes/counsellor");
 const app = express();
 
-// Only allow the Vercel frontend (or FRONTEND_URL from env)
+// Only allow the Vercel frontend (or FRONTEND_URL from env) and local dev
 const allowedOrigins = [
   process.env.FRONTEND_URL || "https://vit-voice-sadhana.vercel.app",
+  "http://localhost:5173", // added local dev origin
 ].filter(Boolean);
 
 app.use(
