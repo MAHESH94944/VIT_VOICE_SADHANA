@@ -93,44 +93,45 @@ export default function AddSadhana() {
     setLoading(false);
   };
 
-  const renderSelect = (name, label, options, isCustomizable = false) => (
-    <div>
-      <label
-        htmlFor={name}
-        className="block text-sm font-medium text-gray-700 mb-1"
-      >
-        {label}
-      </label>
-      <select
-        id={name}
-        name={name}
-        value={form[name]}
-        onChange={handleChange}
-        className="w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      {isCustomizable && form[name] === "Other..." && (
-        <input
-          type="text"
+  const renderSelect = (name, label, options, isCustomizable = false) => {
+    // consider these keys as time fields
+    const isTimeField = ["wakeUp", "japaCompleted", "timeToBed"].includes(name);
+
+    return (
+      <div>
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          {label}
+        </label>
+        <select
+          id={name}
           name={name}
-          value={customValues[name]}
-          onChange={handleCustomValueChange}
-          placeholder={
-            name.includes("Time") || name.includes("wakeUp")
-              ? "e.g., 5:45 AM"
-              : "e.g., 1 hr 10 min"
-          }
-          className="w-full mt-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          required
-        />
-      )}
-    </div>
-  );
+          value={form[name]}
+          onChange={handleChange}
+          className="w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        {isCustomizable && form[name] === "Other..." && (
+          <input
+            type="text"
+            name={name}
+            value={customValues[name]}
+            onChange={handleCustomValueChange}
+            placeholder={isTimeField ? "e.g., 6:00 AM" : "e.g., 1 hr 10 min"}
+            className="w-full mt-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            required
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-4 pb-32 md:pb-8">
