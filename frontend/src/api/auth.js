@@ -10,11 +10,6 @@ export async function getCounsellors() {
   return res.data;
 }
 
-export async function verifyOtp(email, otp) {
-  const res = await api.post("/auth/verify-otp", { email, otp });
-  return res.data;
-}
-
 export async function loginUser(credentials) {
   const res = await api.post("/auth/login", credentials);
   return res.data;
@@ -35,3 +30,4 @@ export async function getMe() {
     throw err;
   }
 }
+

@@ -5,7 +5,6 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 
 router.post("/register", authController.register);
 router.get("/counsellors", authController.getCounsellors);
-router.post("/verify-otp", authController.verifyOtp);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.get("/me", authMiddleware, authController.getMe);

@@ -2,23 +2,6 @@ const User = require("../models/User");
 const CounsellorAssignment = require("../models/CounsellorAssignment");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
-
-// Verify transporter on startup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email transporter error:", error);
-  } else {
-    console.log("Email transporter is ready");
-  }
-});
 
 exports.register = async (req, res) => {
   const { name, email, password, role, counsellorName } = req.body;
@@ -45,8 +28,6 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
 
     const user = new User({
       name,
@@ -54,9 +35,6 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       counsellor: counsellorId,
-      otp,
-      otpExpires,
-      otpVerified: false,
     });
     await user.save();
 
@@ -68,26 +46,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Your OTP for VIT VOICE Sadhana Registration",
-        text: `Your OTP is: ${otp}. It expires in 10 minutes.`,
-      });
-      res.status(201).json({ message: "Registered. OTP sent to email." });
-    } catch (emailErr) {
-      await User.deleteOne({ _id: user._id }); // Clean up user if email fails
-      if (role === "counsilli" && counsellorId) {
-        await CounsellorAssignment.deleteOne({
-          counsellor: counsellorId,
-          counsilli: user._id,
-        });
-      }
-      res
-        .status(500)
-        .json({ message: "Failed to send OTP email", error: emailErr.message });
-    }
+    // Return success — frontend should redirect to login page
+    res.status(201).json({ message: "Registered successfully. Please login." });
   } catch (err) {
     res
       .status(500)
@@ -106,38 +66,11 @@ exports.getCounsellors = async (req, res) => {
   }
 };
 
-exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (!user.otp || !user.otpExpires || user.otpExpires < new Date())
-      return res
-        .status(400)
-        .json({ message: "OTP expired. Please register again." });
-    if (user.otp !== otp)
-      return res.status(400).json({ message: "Invalid OTP" });
-
-    user.otpVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-    res.json({ message: "OTP verified. Registration complete." });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "OTP verification failed", error: err.message });
-  }
-};
-
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user || !user.otpVerified)
-      return res
-        .status(400)
-        .json({ message: "Invalid credentials or OTP not verified" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
@@ -149,9 +82,9 @@ exports.login = async (req, res) => {
     );
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site cookies in production
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.json({ message: "Login successful", token });
   } catch (err) {
