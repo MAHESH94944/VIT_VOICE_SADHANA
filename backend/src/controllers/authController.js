@@ -2,23 +2,25 @@ const User = require("../models/User");
 const CounsellorAssignment = require("../models/CounsellorAssignment");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const { OAuth2Client } = require("google-auth-library");
 
-// Verify transporter on startup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email transporter error:", error);
-  } else {
-    console.log("Email transporter is ready");
-  }
-});
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function createAndSendToken(user, res) {
+  // create JWT and set cookie (same behavior as before)
+  const token = jwt.sign(
+    { userId: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  return token;
+}
 
 exports.register = async (req, res) => {
   const { name, email, password, role, counsellorName } = req.body;
@@ -45,8 +47,6 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
 
     const user = new User({
       name,
@@ -54,9 +54,6 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       counsellor: counsellorId,
-      otp,
-      otpExpires,
-      otpVerified: false,
     });
     await user.save();
 
@@ -68,26 +65,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Your OTP for VIT VOICE Sadhana Registration",
-        text: `Your OTP is: ${otp}. It expires in 10 minutes.`,
-      });
-      res.status(201).json({ message: "Registered. OTP sent to email." });
-    } catch (emailErr) {
-      await User.deleteOne({ _id: user._id }); // Clean up user if email fails
-      if (role === "counsilli" && counsellorId) {
-        await CounsellorAssignment.deleteOne({
-          counsellor: counsellorId,
-          counsilli: user._id,
-        });
-      }
-      res
-        .status(500)
-        .json({ message: "Failed to send OTP email", error: emailErr.message });
-    }
+    res.status(201).json({ message: "Registered successfully" });
   } catch (err) {
     res
       .status(500)
@@ -106,53 +84,112 @@ exports.getCounsellors = async (req, res) => {
   }
 };
 
-exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
+// New google-login endpoint
+exports.googleLogin = async (req, res) => {
+  const { idToken, role, counsellorName } = req.body;
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (!user.otp || !user.otpExpires || user.otpExpires < new Date())
-      return res
-        .status(400)
-        .json({ message: "OTP expired. Please register again." });
-    if (user.otp !== otp)
-      return res.status(400).json({ message: "Invalid OTP" });
+    if (!idToken) return res.status(400).json({ message: "idToken required" });
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const name = payload.name || payload.email.split("@")[0];
 
-    user.otpVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-    res.json({ message: "OTP verified. Registration complete." });
+    let user = await User.findOne({ email });
+    if (user) {
+      // existing user: login
+      const token = createAndSendToken(user, res);
+      return res.json({
+        message: "Login successful",
+        token,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    }
+
+    // new user: if frontend supplied role, create user; otherwise ask frontend to collect role
+    if (!role) {
+      return res.status(200).json({ needRole: true, email, name });
+    }
+
+    let counsellorId;
+    if (role === "counsilli") {
+      if (!counsellorName) {
+        return res
+          .status(400)
+          .json({ message: "Counsellor name required for counsilli" });
+      }
+      const counsellorUser = await User.findOne({
+        name: counsellorName,
+        role: "counsellor",
+      });
+      if (!counsellorUser)
+        return res
+          .status(400)
+          .json({ message: "Counsellor with this name does not exist" });
+      counsellorId = counsellorUser._id;
+    }
+
+    // create user (password optional for Google users)
+    const newUser = new User({
+      name,
+      email,
+      password: undefined,
+      role,
+      counsellor: counsellorId,
+    });
+    await newUser.save();
+
+    // add assignment if counsilli
+    if (role === "counsilli" && counsellorId) {
+      await CounsellorAssignment.create({
+        counsellor: counsellorId,
+        counsilli: newUser._id,
+      });
+    }
+
+    const token = createAndSendToken(newUser, res);
+    return res.status(201).json({
+      message: "User created and logged in",
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
   } catch (err) {
+    console.error("Google login error:", err);
     res
       .status(500)
-      .json({ message: "OTP verification failed", error: err.message });
+      .json({ message: "Google login failed", error: err.message });
   }
 };
 
+// Modified traditional login: remove OTP checks (support password auth as fallback)
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user || !user.otpVerified)
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    // If user has no password (Google-only account) deny password login
+    if (!user.password)
       return res
         .status(400)
-        .json({ message: "Invalid credentials or OTP not verified" });
+        .json({ message: "Use Google Sign-In for this account" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" } // Set token expiration to 7 days
-    );
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site cookies in production
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-    });
+    const token = createAndSendToken(user, res);
     res.json({ message: "Login successful", token });
   } catch (err) {
     res.status(500).json({ message: "Login failed", error: err.message });
@@ -170,12 +207,8 @@ exports.logout = (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select(
-      "-password -otp -otpExpires"
-    );
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json({ user });
   } catch (err) {
     res
