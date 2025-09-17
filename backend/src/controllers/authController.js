@@ -75,7 +75,11 @@ exports.register = async (req, res) => {
 
 exports.getCounsellors = async (req, res) => {
   try {
-    const counsellors = await User.find({ role: "counsellor" }).select("name");
+    // Return only counsellors who have logged in at least once (lastLogin exists)
+    const counsellors = await User.find({
+      role: "counsellor",
+      lastLogin: { $exists: true },
+    }).select("name _id");
     res.json(counsellors);
   } catch (err) {
     res
@@ -99,7 +103,9 @@ exports.googleLogin = async (req, res) => {
 
     let user = await User.findOne({ email });
     if (user) {
-      // existing user: login
+      // existing user: update lastLogin and login
+      user.lastLogin = new Date();
+      await user.save();
       const token = createAndSendToken(user, res);
       return res.json({
         message: "Login successful",
@@ -143,6 +149,7 @@ exports.googleLogin = async (req, res) => {
       password: undefined,
       role,
       counsellor: counsellorId,
+      lastLogin: new Date(), // mark as logged in immediately
     });
     await newUser.save();
 
@@ -188,6 +195,10 @@ exports.login = async (req, res) => {
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
+
+    // update lastLogin
+    user.lastLogin = new Date();
+    await user.save();
 
     const token = createAndSendToken(user, res);
     res.json({ message: "Login successful", token });
