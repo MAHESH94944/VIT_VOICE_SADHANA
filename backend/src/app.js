@@ -6,28 +6,38 @@ const counsilliRoutes = require("./routes/counsilli");
 const counsellorRoutes = require("./routes/counsellor");
 const app = express();
 
-const allowedOrigins = [
-  // "https://vit-voice-sadhana.vercel.app", // Old Vercel deployment
-  "http://localhost:5173", // Local development
-  // process.env.FRONTEND_URL, // Production frontend from .env
-].filter(Boolean); // Filter out undefined values
+// trust proxy so secure cookies work behind Render/Vercel
+app.set("trust proxy", 1);
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
-      }
+// Build allowed origins from env + local dev
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.FRONTEND_URL, // e.g. https://vit-voice-sadhana.vercel.app
+  "https://vit-voice-sadhana.vercel.app",
+].filter(Boolean);
+
+// CORS options that allow credentials and handle preflight
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow requests with no origin (curl, mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
+    }
+    return callback(
+      new Error("CORS policy does not allow this origin."),
+      false
+    );
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
+// enable CORS and preflight
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -39,5 +49,20 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/counsilli", counsilliRoutes);
 app.use("/api/counsellor", counsellorRoutes);
+
+// JSON error handler so frontend never receives HTML error pages
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err && err.stack ? err.stack : err);
+  // CORS errors come here too
+  if (err && err.message && err.message.indexOf("CORS") !== -1) {
+    return res.status(403).json({ message: err.message });
+  }
+  const status = (err && err.status) || 500;
+  return res
+    .status(status)
+    .json({
+      message: err && err.message ? err.message : "Internal Server Error",
+    });
+});
 
 module.exports = app;
