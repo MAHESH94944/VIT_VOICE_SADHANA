@@ -1,9 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const authRoutes = require("./routes/auth");
-const counsilliRoutes = require("./routes/counsilli");
-const counsellorRoutes = require("./routes/counsellor");
 const app = express();
 
 // trust proxy so secure cookies work behind Render/Vercel
@@ -12,7 +9,6 @@ app.set("trust proxy", 1);
 // Build allowed origins from env + local dev
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:3000",
   process.env.FRONTEND_URL, // e.g. https://vit-voice-sadhana.vercel.app
   "https://vit-voice-sadhana.vercel.app",
 ].filter(Boolean);
@@ -34,9 +30,8 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 
-// enable CORS and preflight
+// enable CORS (preflight handled by cors middleware)
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -46,9 +41,51 @@ app.get("/", (req, res) => {
   res.json({ message: "VIT VOICE Sadhana API is working!" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/counsilli", counsilliRoutes);
-app.use("/api/counsellor", counsellorRoutes);
+// --- Safe mount helper to avoid path-to-regexp crashes when a bad mount path is provided ---
+function isValidMountPath(p) {
+  // must be a string, start with '/', not be a full URL and not contain spaces or braces
+  return (
+    typeof p === "string" &&
+    p.startsWith("/") &&
+    !p.includes("://") &&
+    !p.includes(" ") &&
+    !p.includes("{") &&
+    !p.includes("}")
+  );
+}
+
+function safeMount(basePath, modulePath) {
+  try {
+    if (!isValidMountPath(basePath)) {
+      console.error(`Skipping invalid mount path: "${basePath}"`);
+      return;
+    }
+    // require the router lazily so any errors in the router file can be caught
+    let router;
+    try {
+      router = require(modulePath);
+    } catch (requireErr) {
+      console.error(
+        `Failed to load router module "${modulePath}":`,
+        requireErr && requireErr.stack ? requireErr.stack : requireErr
+      );
+      return;
+    }
+    app.use(basePath, router);
+    console.log(`Mounted router at ${basePath} -> ${modulePath}`);
+  } catch (err) {
+    // Log full error (do not rethrow so process doesn't crash on bad pattern)
+    console.error(
+      `Failed to mount router at ${basePath}:`,
+      err && err.stack ? err.stack : err
+    );
+  }
+}
+
+// Use safeMount with module paths (relative to this file)
+safeMount("/api/auth", "./routes/auth");
+safeMount("/api/counsilli", "./routes/counsilli");
+safeMount("/api/counsellor", "./routes/counsellor");
 
 // JSON error handler so frontend never receives HTML error pages
 app.use((err, req, res, next) => {
@@ -58,11 +95,9 @@ app.use((err, req, res, next) => {
     return res.status(403).json({ message: err.message });
   }
   const status = (err && err.status) || 500;
-  return res
-    .status(status)
-    .json({
-      message: err && err.message ? err.message : "Internal Server Error",
-    });
+  return res.status(status).json({
+    message: err && err.message ? err.message : "Internal Server Error",
+  });
 });
 
 module.exports = app;
