@@ -128,13 +128,34 @@ exports.requestPasswordReset = async (req, res) => {
     user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Use explicit SMTP settings when provided (safer for deployments)
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT;
+    const smtpSecure =
+      process.env.SMTP_SECURE === "true" || process.env.SMTP_SECURE === "1";
+
+    const transportOptions = smtpHost
+      ? {
+          host: smtpHost,
+          port: smtpPort ? Number(smtpPort) : smtpSecure ? 465 : 587,
+          secure: smtpSecure,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+          tls: {
+            rejectUnauthorized: false,
+          },
+        }
+      : {
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        };
+
+    const transporter = nodemailer.createTransport(transportOptions);
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -153,7 +174,13 @@ exports.requestPasswordReset = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions).catch((err) => {
+      console.error(
+        "Failed to send OTP email:",
+        err && err.stack ? err.stack : err,
+      );
+      throw err;
+    });
 
     res.json({ message: "OTP sent to email" });
   } catch (err) {
