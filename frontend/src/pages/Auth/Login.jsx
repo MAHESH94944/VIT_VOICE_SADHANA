@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import PasswordInput from "../../components/common/PasswordInput";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -54,14 +55,12 @@ export default function Login() {
               required
             />
           </div>
-          <div className="relative">
-            <input
+          <div>
+            <PasswordInput
               name="password"
-              type="password"
-              placeholder="Password"
               value={form.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              onChange={(e) => handleChange(e)}
+              placeholder="Password"
               required
             />
           </div>
@@ -69,6 +68,14 @@ export default function Login() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               {/* You can add a "Remember me" checkbox here if needed */}
+            </div>
+            <div>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
           </div>
 

@@ -20,7 +20,9 @@ export function AuthProvider({ children }) {
       const res = await getMe();
       setUser(res?.user || null);
     } catch (err) {
-      console.error("Session refresh failed:", err);
+      // Suppress expected 401 Unauthorized errors for unauthenticated sessions
+      if (err?.response?.status !== 401)
+        console.error("Session refresh failed:", err);
       setUser(null);
     }
     setLoading(false);
@@ -69,7 +71,7 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({ user, setUser, loading, login, logout, refresh, loginWithGoogle }),
-    [user, loading, refresh]
+    [user, loading, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { registerUser, getCounsellors } from "../../api/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { validatePassword } from "../../utils/validate";
+import PasswordInput from "../../components/common/PasswordInput";
 
 export default function Register() {
   const [role, setRole] = useState("counsilli"); // 'counsilli' or 'counsellor'
@@ -135,13 +136,11 @@ export default function Register() {
             className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             required
           />
-          <input
+          <PasswordInput
             name="password"
-            type="password"
-            placeholder="Password"
             value={form.password}
-            onChange={handleChange}
-            className="w-full px-4 py-3 text-gray-700 bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            onChange={(e) => handleChange(e)}
+            placeholder="Password"
             required
           />
           {role === "counsilli" && (
@@ -186,4 +185,3 @@ export default function Register() {
     </div>
   );
 }
-            

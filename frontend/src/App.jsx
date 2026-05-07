@@ -31,13 +31,14 @@ function useIsMobile() {
 const Register = lazy(() => import("./pages/Auth/Register"));
 const Login = lazy(() => import("./pages/Auth/Login"));
 const VerifyOTP = lazy(() => import("./pages/Auth/VerifyOTP"));
+const ForgotPassword = lazy(() => import("./pages/Auth/ForgotPassword"));
 const CounsilliDashboard = lazy(() => import("./pages/Counsilli/Dashboard"));
 const AddSadhana = lazy(() => import("./pages/Counsilli/AddSadhana"));
 const MonthlyReport = lazy(() => import("./pages/Counsilli/MonthlyReport"));
 const CounsellorDashboard = lazy(() => import("./pages/Counsellor/Dashboard"));
 const CounsilliList = lazy(() => import("./pages/Counsellor/CounsilliList"));
-const CounsilliReport = lazy(() =>
-  import("./pages/Counsellor/CounsilliReport")
+const CounsilliReport = lazy(
+  () => import("./pages/Counsellor/CounsilliReport"),
 );
 
 // Protected route component (uses context)
@@ -343,6 +344,14 @@ function AppShell() {
               element={
                 <PublicRoute>
                   <VerifyOTP />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPassword />
                 </PublicRoute>
               }
             />

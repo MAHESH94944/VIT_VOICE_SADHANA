@@ -31,3 +31,21 @@ export async function getMe() {
   }
 }
 
+export async function requestPasswordReset(email) {
+  const res = await api.post("/auth/forgot-password", { email });
+  return res.data;
+}
+
+export async function verifyResetOTP(email, otp) {
+  const res = await api.post("/auth/verify-otp", { email, otp });
+  return res.data;
+}
+
+export async function resetPassword(email, otp, newPassword) {
+  const res = await api.post("/auth/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+  return res.data;
+}
