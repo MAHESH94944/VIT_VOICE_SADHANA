@@ -58,9 +58,26 @@ exports.testEmail = async (req, res) => {
       const info = await transporter.sendMail(mailOptions);
       result.sendResult = info;
     } catch (err) {
+      // Attempt SendGrid fallback if configured
       result.sendResult = {
         error: err && err.message ? err.message : String(err),
       };
+      if (process.env.SENDGRID_API_KEY) {
+        try {
+          const sgMail = require("@sendgrid/mail");
+          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+          const sgRes = await sgMail.send({
+            to,
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+            subject: mailOptions.subject,
+            text: mailOptions.text,
+          });
+          result.sendResult = { sendgrid: sgRes };
+        } catch (sgErr) {
+          result.sendResult.sendgridError =
+            sgErr && sgErr.message ? sgErr.message : String(sgErr);
+        }
+      }
     }
   }
 

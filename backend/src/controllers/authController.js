@@ -158,10 +158,12 @@ exports.requestPasswordReset = async (req, res) => {
     const transporter = nodemailer.createTransport(transportOptions);
 
     // Verify transporter connection (useful for debugging in production)
+    let smtpVerified = true;
     try {
       await transporter.verify();
       console.log("SMTP transporter verified");
     } catch (verifyErr) {
+      smtpVerified = false;
       console.error(
         "SMTP transporter verification failed:",
         verifyErr && verifyErr.stack ? verifyErr.stack : verifyErr,
@@ -185,13 +187,52 @@ exports.requestPasswordReset = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions).catch((err) => {
-      console.error(
-        "Failed to send OTP email:",
-        err && err.stack ? err.stack : err,
-      );
-      throw err;
-    });
+    // Try SMTP first if verified, otherwise fall back to SendGrid if configured
+    async function sendViaSendGrid() {
+      try {
+        const sgMail = require("@sendgrid/mail");
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        await sgMail.send({
+          to: user.email,
+          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+          subject: mailOptions.subject,
+          text: mailOptions.text,
+          html: mailOptions.html,
+        });
+        console.log("OTP sent via SendGrid fallback");
+        return true;
+      } catch (sgErr) {
+        console.error(
+          "SendGrid fallback failed:",
+          sgErr && sgErr.stack ? sgErr.stack : sgErr,
+        );
+        return false;
+      }
+    }
+
+    if (smtpVerified) {
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (err) {
+        console.error(
+          "Failed to send OTP email via SMTP:",
+          err && err.stack ? err.stack : err,
+        );
+        if (process.env.SENDGRID_API_KEY) {
+          const ok = await sendViaSendGrid();
+          if (!ok) throw err;
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      if (process.env.SENDGRID_API_KEY) {
+        const ok = await sendViaSendGrid();
+        if (!ok) throw new Error("Both SMTP and SendGrid failed to send email");
+      } else {
+        throw new Error("SMTP not available and no SendGrid API key configured");
+      }
+    }
 
     res.json({ message: "OTP sent to email" });
   } catch (err) {
