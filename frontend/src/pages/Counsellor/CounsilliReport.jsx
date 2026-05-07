@@ -23,7 +23,7 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 ChartJS.register(
   CategoryScale,
@@ -33,7 +33,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 // --- Advanced Chart Component ---
@@ -300,7 +300,7 @@ export default function CounsilliReport() {
 
     const labels = Array.from(
       { length: getDaysInMonth(...month.split("-")) },
-      (_, i) => i + 1
+      (_, i) => i + 1,
     );
 
     const getChartData = (key, parser, inverted = false, maxVal = 120) => {
@@ -329,7 +329,7 @@ export default function CounsilliReport() {
         "japaCompleted",
         parseTimeToMinutes,
         true,
-        1320
+        1320,
       ), // Invert against 10 PM
       timeToBed: getChartData("timeToBed", parseTimeToMinutes, true, 1560), // Invert against 2 AM (1440 + 120)
       dayRest: getChartData("dayRest", parseDurationToMinutes, true, 120), // Invert against 120 min

@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import PageTitle from "../../components/common/PageTitle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Card from "../../components/common/Card";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
