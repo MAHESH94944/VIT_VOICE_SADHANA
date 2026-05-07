@@ -128,6 +128,9 @@ exports.requestPasswordReset = async (req, res) => {
     user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
+    // Sanitize common env secrets (some deploy UIs insert spaces)
+    const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
+
     // Use explicit SMTP settings when provided (safer for deployments)
     const smtpHost = process.env.SMTP_HOST;
     const smtpPort = process.env.SMTP_PORT;
@@ -141,7 +144,7 @@ exports.requestPasswordReset = async (req, res) => {
           secure: smtpSecure,
           auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            pass: emailPass,
           },
           tls: {
             rejectUnauthorized: false,
@@ -151,7 +154,7 @@ exports.requestPasswordReset = async (req, res) => {
           service: "gmail",
           auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            pass: emailPass,
           },
         };
 
@@ -230,7 +233,9 @@ exports.requestPasswordReset = async (req, res) => {
         const ok = await sendViaSendGrid();
         if (!ok) throw new Error("Both SMTP and SendGrid failed to send email");
       } else {
-        throw new Error("SMTP not available and no SendGrid API key configured");
+        throw new Error(
+          "SMTP not available and no SendGrid API key configured",
+        );
       }
     }
 

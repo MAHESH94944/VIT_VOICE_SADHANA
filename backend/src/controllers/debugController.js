@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 
 // Helper to build transport options (same logic as authController)
 function buildTransportOptions() {
+  const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
   const smtpHost = process.env.SMTP_HOST;
   const smtpPort = process.env.SMTP_PORT;
   const smtpSecure =
@@ -14,7 +15,7 @@ function buildTransportOptions() {
         secure: smtpSecure,
         auth: {
           user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+          pass: emailPass,
         },
         tls: { rejectUnauthorized: false },
       }
@@ -22,7 +23,7 @@ function buildTransportOptions() {
         service: "gmail",
         auth: {
           user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+          pass: emailPass,
         },
       };
 }
