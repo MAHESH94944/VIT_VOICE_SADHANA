@@ -3,7 +3,7 @@ import axios from "axios";
 // Default to the hosted backend. You can override locally by creating
 // a `.env` and setting VITE_API_BASE (e.g. VITE_API_BASE=http://localhost:3000).
 let API_BASE_URL =
-  import.meta.env.VITE_API_BASE;
+  import.meta.env.VITE_API_BASE || "https://vit-voice-sadhana.onrender.com/api";
 // If the dev-provided VITE_API_BASE does not include the `/api` prefix, append it.
 if (import.meta.env.VITE_API_BASE) {
   API_BASE_URL = String(import.meta.env.VITE_API_BASE).replace(/\/+$/g, "");
