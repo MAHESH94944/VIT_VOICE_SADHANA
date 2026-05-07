@@ -6,6 +6,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ["counsellor", "counsilli"], required: true },
   counsellor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  // Fields for password reset via OTP
+  resetOTP: { type: String },
+  resetOTPExpires: { type: Date },
 });
 
 module.exports = mongoose.model("User", userSchema);

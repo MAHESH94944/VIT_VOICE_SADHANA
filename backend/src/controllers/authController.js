@@ -2,6 +2,7 @@ const User = require("../models/User");
 const CounsellorAssignment = require("../models/CounsellorAssignment");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 exports.register = async (req, res) => {
   const { name, email, password, role, counsellorName } = req.body;
@@ -78,7 +79,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" } // Set token expiration to 7 days
+      { expiresIn: "7d" }, // Set token expiration to 7 days
     );
     res.cookie("token", token, {
       httpOnly: true,
@@ -115,3 +116,92 @@ exports.getMe = async (req, res) => {
   }
 };
 
+// Send OTP to user's email for password reset
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOTP = otp;
+    user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password reset OTP",
+      text: `Your password reset OTP is ${otp}. It expires in 15 minutes.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color:#f97316">VIT VOICE Sadhana — Password Reset</h2>
+          <p>Hi ${user.name || "user"},</p>
+          <p>Use the following One Time Password (OTP) to reset your password. It will expire in 15 minutes.</p>
+          <div style="margin: 18px 0; padding: 12px 18px; background: #fff7ed; border-radius: 8px; display: inline-block; font-size: 20px; letter-spacing: 4px; font-weight: 700; color:#b45309">${otp}</div>
+          <p style="color: #666; font-size: 14px;">If you did not request this, you can safely ignore this email.</p>
+          <p style="margin-top: 10px; font-size:13px; color:#888">— VIT VOICE Sadhana</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "OTP sent to email" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send OTP", error: err.message });
+  }
+};
+
+exports.verifyResetOTP = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !user.resetOTP)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (user.resetOTPExpires < Date.now())
+      return res.status(400).json({ message: "OTP expired" });
+    if (user.resetOTP !== otp)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    // OTP is valid
+    res.json({ message: "OTP verified" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "OTP verification failed", error: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !user.resetOTP)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (user.resetOTPExpires < Date.now())
+      return res.status(400).json({ message: "OTP expired" });
+    if (user.resetOTP !== otp)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.resetOTP = undefined;
+    user.resetOTPExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Password reset failed", error: err.message });
+  }
+};

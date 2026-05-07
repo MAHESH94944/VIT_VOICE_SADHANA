@@ -8,5 +8,8 @@ router.get("/counsellors", authController.getCounsellors);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.get("/me", authMiddleware, authController.getMe);
+router.post("/forgot-password", authController.requestPasswordReset);
+router.post("/verify-otp", authController.verifyResetOTP);
+router.post("/reset-password", authController.resetPassword);
 
 module.exports = router;
