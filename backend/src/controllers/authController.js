@@ -157,6 +157,17 @@ exports.requestPasswordReset = async (req, res) => {
 
     const transporter = nodemailer.createTransport(transportOptions);
 
+    // Verify transporter connection (useful for debugging in production)
+    try {
+      await transporter.verify();
+      console.log("SMTP transporter verified");
+    } catch (verifyErr) {
+      console.error(
+        "SMTP transporter verification failed:",
+        verifyErr && verifyErr.stack ? verifyErr.stack : verifyErr,
+      );
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
