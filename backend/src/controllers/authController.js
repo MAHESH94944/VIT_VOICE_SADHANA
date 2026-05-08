@@ -2,7 +2,6 @@ const User = require("../models/User");
 const CounsellorAssignment = require("../models/CounsellorAssignment");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const axios = require("axios");
 
 exports.register = async (req, res) => {
@@ -115,7 +114,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Request password reset: generate OTP, save to user, and send via SMTP/SendGrid/Brevo
+// Request password reset: generate OTP, save to user, and send via Brevo HTTP API
 exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
   try {
@@ -127,31 +126,11 @@ exports.requestPasswordReset = async (req, res) => {
     user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: (process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
-      },
-    });
-
-    // Verify transporter
-    let smtpVerified = true;
-    try {
-      await transporter.verify();
-      console.log("SMTP transporter verified");
-    } catch (verifyErr) {
-      smtpVerified = false;
-      console.error(
-        "SMTP transporter verification failed:",
-        verifyErr && verifyErr.stack ? verifyErr.stack : verifyErr,
-      );
-    }
-
     const mailOptions = {
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      from:
+        process.env.EMAIL_FROM ||
+        process.env.EMAIL_USER ||
+        "no-reply@example.com",
       to: user.email,
       subject: "Password reset OTP",
       text: `Your password reset OTP is ${otp}. It expires in 15 minutes.`,
@@ -167,97 +146,54 @@ exports.requestPasswordReset = async (req, res) => {
       `,
     };
 
-    async function sendViaSendGrid() {
-      try {
-        const sgMail = require("@sendgrid/mail");
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        await sgMail.send({
-          to: user.email,
-          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-          subject: mailOptions.subject,
-          text: mailOptions.text,
-          html: mailOptions.html,
-        });
-        console.log("OTP sent via SendGrid fallback");
-        return true;
-      } catch (sgErr) {
-        console.error(
-          "SendGrid fallback failed:",
-          sgErr && sgErr.stack ? sgErr.stack : sgErr,
-        );
-        return false;
-      }
+    // Send via Brevo HTTP API (no SMTP or SendGrid)
+    if (!process.env.BREVO_API_KEY) {
+      return res.status(500).json({
+        message:
+          "BREVO_API_KEY not configured. Set BREVO_API_KEY in environment.",
+      });
     }
 
-    async function sendViaBrevo() {
-      try {
-        const rawFrom =
-          process.env.EMAIL_FROM ||
-          process.env.EMAIL_USER ||
-          "no-reply@example.com";
-        let sender = {
-          name: "VIT VOICE Sadhana",
-          email: process.env.EMAIL_USER,
-        };
-        const m = String(rawFrom).match(/(.*)<(.+)>/);
-        if (m) {
-          sender.name = m[1].trim().replace(/^"|"$/g, "");
-          sender.email = m[2].trim();
-        } else if (rawFrom && rawFrom.includes("@")) {
-          sender.email = String(rawFrom).trim();
-        }
+    const rawFrom =
+      process.env.EMAIL_FROM ||
+      process.env.EMAIL_USER ||
+      "no-reply@example.com";
+    let sender = { name: "VIT VOICE Sadhana", email: process.env.EMAIL_USER };
+    const m = String(rawFrom).match(/(.*)<(.+)>/);
+    if (m) {
+      sender.name = m[1].trim().replace(/^"|"$/g, "");
+      sender.email = m[2].trim();
+    } else if (rawFrom && rawFrom.includes("@")) {
+      sender.email = String(rawFrom).trim();
+    }
 
-        const payload = {
-          sender,
-          to: [{ email: user.email }],
-          subject: mailOptions.subject,
-          htmlContent: mailOptions.html,
-          textContent: mailOptions.text,
-        };
+    const payload = {
+      sender,
+      to: [{ email: user.email }],
+      subject: mailOptions.subject,
+      htmlContent: mailOptions.html,
+      textContent: mailOptions.text,
+    };
 
-        const r = await axios.post(
-          "https://api.brevo.com/v3/smtp/email",
-          payload,
-          {
-            headers: {
-              "api-key": process.env.BREVO_API_KEY,
-              "Content-Type": "application/json",
-            },
-            timeout: 10000,
+    try {
+      const r = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        payload,
+        {
+          headers: {
+            "api-key": process.env.BREVO_API_KEY,
+            "Content-Type": "application/json",
           },
-        );
-        console.log("OTP sent via Brevo fallback", r.status);
-        return true;
-      } catch (bErr) {
-        console.error(
-          "Brevo fallback failed:",
-          bErr?.response?.data || bErr?.message || bErr,
-        );
-        return false;
-      }
-    }
-
-    if (smtpVerified) {
-      try {
-        await transporter.sendMail(mailOptions);
-      } catch (err) {
-        console.error(
-          "Failed to send OTP email via SMTP:",
-          err && err.stack ? err.stack : err,
-        );
-        let sent = false;
-        if (process.env.SENDGRID_API_KEY) sent = await sendViaSendGrid();
-        if (!sent && process.env.BREVO_API_KEY) sent = await sendViaBrevo();
-        if (!sent) throw err;
-      }
-    } else {
-      let sent = false;
-      if (process.env.SENDGRID_API_KEY) sent = await sendViaSendGrid();
-      if (!sent && process.env.BREVO_API_KEY) sent = await sendViaBrevo();
-      if (!sent)
-        throw new Error(
-          "SMTP not available and no SendGrid/Brevo could send email",
-        );
+          timeout: 10000,
+        },
+      );
+      console.log("OTP sent via Brevo", r.status);
+    } catch (sendErr) {
+      console.error(
+        "Brevo send failed:",
+        sendErr?.response?.data || sendErr?.message || sendErr,
+      );
+      throw sendErr;
     }
 
     res.json({ message: "OTP sent to email" });

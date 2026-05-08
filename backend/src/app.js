@@ -4,7 +4,6 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const counsilliRoutes = require("./routes/counsilli");
 const counsellorRoutes = require("./routes/counsellor");
-const debugRoutes = require("./routes/debug");
 const app = express();
 
 // Only allow the Vercel frontend (or FRONTEND_URL from env) and local dev
@@ -41,6 +40,5 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/counsilli", counsilliRoutes);
 app.use("/api/counsellor", counsellorRoutes);
-app.use("/api/debug", debugRoutes);
 
 module.exports = app;
