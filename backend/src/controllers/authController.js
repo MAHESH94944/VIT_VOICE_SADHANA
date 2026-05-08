@@ -3,6 +3,7 @@ const CounsellorAssignment = require("../models/CounsellorAssignment");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 exports.register = async (req, res) => {
   const { name, email, password, role, counsellorName } = req.body;
@@ -105,10 +106,8 @@ exports.logout = (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json({ user });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
   } catch (err) {
     res
       .status(500)
@@ -116,7 +115,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Send OTP to user's email for password reset
+// Request password reset: generate OTP, save to user, and send via SMTP/SendGrid/Brevo
 exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
   try {
@@ -128,39 +127,17 @@ exports.requestPasswordReset = async (req, res) => {
     user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    // Sanitize common env secrets (some deploy UIs insert spaces)
-    const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: (process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
+      },
+    });
 
-    // Use explicit SMTP settings when provided (safer for deployments)
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = process.env.SMTP_PORT;
-    const smtpSecure =
-      process.env.SMTP_SECURE === "true" || process.env.SMTP_SECURE === "1";
-
-    const transportOptions = smtpHost
-      ? {
-          host: smtpHost,
-          port: smtpPort ? Number(smtpPort) : smtpSecure ? 465 : 587,
-          secure: smtpSecure,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: emailPass,
-          },
-          tls: {
-            rejectUnauthorized: false,
-          },
-        }
-      : {
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: emailPass,
-          },
-        };
-
-    const transporter = nodemailer.createTransport(transportOptions);
-
-    // Verify transporter connection (useful for debugging in production)
+    // Verify transporter
     let smtpVerified = true;
     try {
       await transporter.verify();
@@ -190,7 +167,6 @@ exports.requestPasswordReset = async (req, res) => {
       `,
     };
 
-    // Try SMTP first if verified, otherwise fall back to SendGrid if configured
     async function sendViaSendGrid() {
       try {
         const sgMail = require("@sendgrid/mail");
@@ -213,6 +189,54 @@ exports.requestPasswordReset = async (req, res) => {
       }
     }
 
+    async function sendViaBrevo() {
+      try {
+        const rawFrom =
+          process.env.EMAIL_FROM ||
+          process.env.EMAIL_USER ||
+          "no-reply@example.com";
+        let sender = {
+          name: "VIT VOICE Sadhana",
+          email: process.env.EMAIL_USER,
+        };
+        const m = String(rawFrom).match(/(.*)<(.+)>/);
+        if (m) {
+          sender.name = m[1].trim().replace(/^"|"$/g, "");
+          sender.email = m[2].trim();
+        } else if (rawFrom && rawFrom.includes("@")) {
+          sender.email = String(rawFrom).trim();
+        }
+
+        const payload = {
+          sender,
+          to: [{ email: user.email }],
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html,
+          textContent: mailOptions.text,
+        };
+
+        const r = await axios.post(
+          "https://api.brevo.com/v3/smtp/email",
+          payload,
+          {
+            headers: {
+              "api-key": process.env.BREVO_API_KEY,
+              "Content-Type": "application/json",
+            },
+            timeout: 10000,
+          },
+        );
+        console.log("OTP sent via Brevo fallback", r.status);
+        return true;
+      } catch (bErr) {
+        console.error(
+          "Brevo fallback failed:",
+          bErr?.response?.data || bErr?.message || bErr,
+        );
+        return false;
+      }
+    }
+
     if (smtpVerified) {
       try {
         await transporter.sendMail(mailOptions);
@@ -221,22 +245,19 @@ exports.requestPasswordReset = async (req, res) => {
           "Failed to send OTP email via SMTP:",
           err && err.stack ? err.stack : err,
         );
-        if (process.env.SENDGRID_API_KEY) {
-          const ok = await sendViaSendGrid();
-          if (!ok) throw err;
-        } else {
-          throw err;
-        }
+        let sent = false;
+        if (process.env.SENDGRID_API_KEY) sent = await sendViaSendGrid();
+        if (!sent && process.env.BREVO_API_KEY) sent = await sendViaBrevo();
+        if (!sent) throw err;
       }
     } else {
-      if (process.env.SENDGRID_API_KEY) {
-        const ok = await sendViaSendGrid();
-        if (!ok) throw new Error("Both SMTP and SendGrid failed to send email");
-      } else {
+      let sent = false;
+      if (process.env.SENDGRID_API_KEY) sent = await sendViaSendGrid();
+      if (!sent && process.env.BREVO_API_KEY) sent = await sendViaBrevo();
+      if (!sent)
         throw new Error(
-          "SMTP not available and no SendGrid API key configured",
+          "SMTP not available and no SendGrid/Brevo could send email",
         );
-      }
     }
 
     res.json({ message: "OTP sent to email" });

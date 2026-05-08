@@ -1,31 +1,17 @@
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 // Helper to build transport options (same logic as authController)
 function buildTransportOptions() {
-  const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT;
-  const smtpSecure =
-    process.env.SMTP_SECURE === "true" || process.env.SMTP_SECURE === "1";
-
-  return smtpHost
-    ? {
-        host: smtpHost,
-        port: smtpPort ? Number(smtpPort) : smtpSecure ? 465 : 587,
-        secure: smtpSecure,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: emailPass,
-        },
-        tls: { rejectUnauthorized: false },
-      }
-    : {
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: emailPass,
-        },
-      };
+  return {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: (process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
+    },
+  };
 }
 
 exports.testEmail = async (req, res) => {
@@ -59,10 +45,11 @@ exports.testEmail = async (req, res) => {
       const info = await transporter.sendMail(mailOptions);
       result.sendResult = info;
     } catch (err) {
-      // Attempt SendGrid fallback if configured
       result.sendResult = {
         error: err && err.message ? err.message : String(err),
       };
+
+      // Attempt SendGrid fallback if configured
       if (process.env.SENDGRID_API_KEY) {
         try {
           const sgMail = require("@sendgrid/mail");
@@ -77,6 +64,56 @@ exports.testEmail = async (req, res) => {
         } catch (sgErr) {
           result.sendResult.sendgridError =
             sgErr && sgErr.message ? sgErr.message : String(sgErr);
+        }
+      }
+
+      // Attempt Brevo fallback if configured
+      if (process.env.BREVO_API_KEY) {
+        try {
+          const rawFrom =
+            process.env.EMAIL_FROM ||
+            process.env.EMAIL_USER ||
+            "no-reply@example.com";
+          let sender = {
+            name: "VIT VOICE Sadhana",
+            email: process.env.EMAIL_USER,
+          };
+          const m = String(rawFrom).match(/(.*)<(.+)>/);
+          if (m) {
+            sender.name = m[1].trim().replace(/^"|"$/g, "");
+            sender.email = m[2].trim();
+          } else if (rawFrom && rawFrom.includes("@")) {
+            sender.email = String(rawFrom).trim();
+          }
+
+          const payload = {
+            sender,
+            to: [{ email: to }],
+            subject: mailOptions.subject,
+            htmlContent: mailOptions.text,
+            textContent: mailOptions.text,
+          };
+
+          const brevoRes = await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            payload,
+            {
+              headers: {
+                "api-key": process.env.BREVO_API_KEY,
+                "Content-Type": "application/json",
+              },
+              timeout: 10000,
+            },
+          );
+          result.sendResult = { brevo: brevoRes.data || brevoRes.status };
+        } catch (brevoErr) {
+          result.sendResult = {
+            ...(result.sendResult || {}),
+            brevoError:
+              brevoErr && brevoErr.message
+                ? brevoErr.message
+                : String(brevoErr),
+          };
         }
       }
     }
