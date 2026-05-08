@@ -18,7 +18,9 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const res = await getMe();
-      setUser(res?.user || null);
+      // Backend returns the user object directly (res) or may return { user }
+      const resolvedUser = res?.user ?? res ?? null;
+      setUser(resolvedUser);
     } catch (err) {
       // Suppress expected 401 Unauthorized errors for unauthenticated sessions
       if (err?.response?.status !== 401)
